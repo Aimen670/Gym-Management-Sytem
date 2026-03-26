@@ -1,4 +1,5 @@
-
+create database gym_management;
+use gym_management;
 CREATE TABLE members (
     member_id INT PRIMARY KEY IDENTITY(1,1),
     full_name VARCHAR(100) NOT NULL,
