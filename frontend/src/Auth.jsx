@@ -34,7 +34,7 @@ function Auth() {
       : formData;
 
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -63,7 +63,7 @@ function Auth() {
             fitness_goal: ''
           });
           setIsLogin(true);
-          setMessage('Account created! Please login.');
+          setMessage('Account Created Successfully');
         }
       } else {
         setMessage(data.error || 'Something went wrong');
@@ -76,24 +76,24 @@ function Auth() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <div className="auth-tabs">
-          <button
-            className={`tab-btn ${isLogin ? 'active' : ''}`}
-            onClick={() => setIsLogin(true)}
-          >
-            Login
-          </button>
-          <button
-            className={`tab-btn ${!isLogin ? 'active' : ''}`}
-            onClick={() => setIsLogin(false)}
-          >
-            Sign Up
-          </button>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-side auth-info">
+          <div className="auth-info-content">
+            <h1>Gym Management</h1>
+            <p>Start your fitness journey with our sleek dashboard and workout tracking.</p>
+            <ul>
+              <li>Member analytics</li>
+              <li>Attendance recording</li>
+              <li>Goal tracking</li>
+            </ul>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-side auth-panel">
+          <div className="auth-box">
+
+            <form onSubmit={handleSubmit} className="auth-form">
           {isLogin ? (
             // Login Form
             <>
@@ -220,9 +220,37 @@ function Auth() {
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? 'Loading...' : isLogin ? 'Login' : 'Sign Up'}
           </button>
+
+          {isLogin && (
+            <p className="auth-toggle">
+              Don't have an account? 
+              <button 
+                type="button" 
+                className="toggle-link" 
+                onClick={() => setIsLogin(false)}
+              >
+                Sign Up
+              </button>
+            </p>
+          )}
+
+          {!isLogin && (
+            <p className="auth-toggle">
+              Already have an account? 
+              <button 
+                type="button" 
+                className="toggle-link" 
+                onClick={() => setIsLogin(true)}
+              >
+                Login
+              </button>
+            </p>
+          )}
         </form>
       </div>
     </div>
+  </div>
+</div>
   );
 }
 
