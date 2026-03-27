@@ -2,13 +2,13 @@ CREATE TABLE members (
     member_id INT PRIMARY KEY IDENTITY(1,1),
     full_name VARCHAR(100) NOT NULL,
     age INT CHECK (age > 0 AND age <= 100),
-    gender VARCHAR(10) CHECK (gender IN ('male','female','other')),
-    phone VARCHAR(20) UNIQUE CHECK (LEN(phone) = 11 AND phone NOT LIKE '%[^0-9]%'),
+    gender VARCHAR(10)  CHECK (gender IN ('male','female','other')),
+    phone VARCHAR(20)  UNIQUE CHECK (LEN(phone) = 11 AND phone NOT LIKE '%[^0-9]%'),
     email VARCHAR(100) UNIQUE CHECK (email LIKE '%@%.%'),
     password VARCHAR(255) NOT NULL CHECK (LEN(password) >= 6),
     fitness_goal TEXT,
     join_date DATE DEFAULT GETDATE(),
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','inactive'))
+    status VARCHAR(20)  DEFAULT 'active' CHECK (status IN ('active','inactive'))
 );
 
 CREATE TABLE admins (
@@ -208,3 +208,5 @@ INSERT INTO equipment (equipment_name, quantity, purchase_date, status) VALUES
 ('Barbell', 10, '2024-02-05', 'available'),
 ('Weight Plates', 30, '2024-02-15', 'in_use'),
 ('Elliptical Machine', 3, '2024-03-10', 'maintenance');
+
+

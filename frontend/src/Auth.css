@@ -329,3 +329,46 @@
   .auth-form { padding: 24px 18px; }
   .form-row { grid-template-columns: 1fr; }
 }
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 45px; 
+}
+
+.eye-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;   
+  border: none;          
+  outline: none;        
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  color: #59628d;       
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+
+.eye-btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background: #ffffff;   
+  color: #59628d;       
+}
+
+.eye-btn:hover {
+  background: #ffffff;   
+  color: #2b43d0;       
+}
+
+
+
+
+

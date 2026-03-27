@@ -11,6 +11,7 @@ function AdminSignup() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 new state
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -28,9 +29,7 @@ function AdminSignup() {
     try {
       const response = await fetch('http://localhost:5000/api/auth/admin-signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -102,16 +101,25 @@ function AdminSignup() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group password-group">
                 <label>Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter password (6+ characters)"
-                />
+                <div className="password-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter password (6+ characters)"
+                  />
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
 
               <div className="form-group">
