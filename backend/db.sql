@@ -1,46 +1,40 @@
-create database gym_management;
-use gym_management;
 CREATE TABLE members (
     member_id INT PRIMARY KEY IDENTITY(1,1),
     full_name VARCHAR(100) NOT NULL,
-    age INT,
-    gender VARCHAR(10),
-    phone VARCHAR(20) UNIQUE,
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    age INT CHECK (age > 0 AND age <= 100),
+    gender VARCHAR(10) CHECK (gender IN ('male','female','other')),
+    phone VARCHAR(20) UNIQUE CHECK (LEN(phone) = 11 AND phone NOT LIKE '%[^0-9]%'),
+    email VARCHAR(100) UNIQUE CHECK (email LIKE '%@%.%'),
+    password VARCHAR(255) NOT NULL CHECK (LEN(password) >= 6),
     fitness_goal TEXT,
     join_date DATE DEFAULT GETDATE(),
-    status VARCHAR(20) DEFAULT 'active'
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','inactive'))
 );
-
 
 CREATE TABLE admins (
     admin_id INT PRIMARY KEY IDENTITY(1,1),
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50)
+    email VARCHAR(100) UNIQUE CHECK (email LIKE '%@%.%'),
+    password VARCHAR(255) NOT NULL CHECK (LEN(password) >= 6),
+    role VARCHAR(50) CHECK (role IN ('manager','supervisor','staff'))
 );
-
 
 CREATE TABLE trainers (
     trainer_id INT PRIMARY KEY IDENTITY(1,1),
     name VARCHAR(100) NOT NULL,
     specialization VARCHAR(100),
-    phone VARCHAR(20),
-    email VARCHAR(100),
-    experience_years INT
+    phone VARCHAR(20) CHECK (LEN(phone) = 11 AND phone NOT LIKE '%[^0-9]%'),
+    email VARCHAR(100) CHECK (email LIKE '%@%.%'),
+    experience_years INT CHECK (experience_years >= 0)
 );
-
 
 CREATE TABLE membership_plans (
     plan_id INT PRIMARY KEY IDENTITY(1,1),
     plan_name VARCHAR(50),
-    duration_months INT,
-    price DECIMAL(10,2),
+    duration_months INT CHECK (duration_months > 0),
+    price DECIMAL(10,2) CHECK (price > 0),
     description TEXT
 );
-
 
 CREATE TABLE member_subscriptions (
     subscription_id INT PRIMARY KEY IDENTITY(1,1),
@@ -48,20 +42,21 @@ CREATE TABLE member_subscriptions (
     plan_id INT,
     start_date DATE,
     end_date DATE,
+
+    CONSTRAINT chk_subscription_dates CHECK (end_date > start_date),
+
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES membership_plans(plan_id) ON DELETE CASCADE
 );
 
-
 CREATE TABLE payments (
     payment_id INT PRIMARY KEY IDENTITY(1,1),
     subscription_id INT,
-    amount DECIMAL(10,2),
-    payment_method VARCHAR(50),
-    payment_date DATE,
+    amount DECIMAL(10,2) CHECK (amount > 0),
+    payment_method VARCHAR(50) CHECK (payment_method IN ('cash','card','online')),
+    payment_date DATE DEFAULT GETDATE(),
     FOREIGN KEY (subscription_id) REFERENCES member_subscriptions(subscription_id) ON DELETE CASCADE
 );
-
 
 CREATE TABLE trainer_sessions (
     session_id INT PRIMARY KEY IDENTITY(1,1),
@@ -69,7 +64,7 @@ CREATE TABLE trainer_sessions (
     trainer_id INT,
     session_date DATE,
     session_time TIME,
-    status VARCHAR(20),
+    status VARCHAR(20) CHECK (status IN ('scheduled','completed','cancelled')),
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
 );
@@ -78,19 +73,18 @@ CREATE TABLE workout_plans (
     workout_plan_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,
     trainer_id INT,
-    created_date DATE,
+    created_date DATE DEFAULT GETDATE(),
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
 );
-
 
 CREATE TABLE workout_exercises (
     exercise_id INT PRIMARY KEY IDENTITY(1,1),
     workout_plan_id INT,
     exercise_name VARCHAR(100),
-    sets INT,
-    reps INT,
-    schedule_day VARCHAR(20),
+    sets INT CHECK (sets > 0),
+    reps INT CHECK (reps > 0),
+    schedule_day VARCHAR(20) CHECK (schedule_day IN ('monday','tuesday','wednesday','thursday','friday','saturday','sunday')),
     FOREIGN KEY (workout_plan_id) REFERENCES workout_plans(workout_plan_id) ON DELETE CASCADE
 );
 
@@ -99,10 +93,9 @@ CREATE TABLE workout_logs (
     member_id INT,
     workout_plan_id INT,
     exercise_id INT,
-    weight_used DECIMAL(6,2),
-    reps_completed INT,
-    log_date DATE,
-
+    weight_used DECIMAL(6,2) CHECK (weight_used >= 0),
+    reps_completed INT CHECK (reps_completed >= 0),
+    log_date DATE DEFAULT GETDATE(),
     FOREIGN KEY (member_id) REFERENCES members(member_id),
     FOREIGN KEY (workout_plan_id) REFERENCES workout_plans(workout_plan_id),
     FOREIGN KEY (exercise_id) REFERENCES workout_exercises(exercise_id)
@@ -112,7 +105,7 @@ CREATE TABLE diet_plans (
     diet_plan_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,
     trainer_id INT,
-    calorie_target INT,
+    calorie_target INT CHECK (calorie_target > 0),
     meal_schedule TEXT,
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE,
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
@@ -121,11 +114,11 @@ CREATE TABLE diet_plans (
 CREATE TABLE body_measurements (
     measurement_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,
-    weight DECIMAL(5,2),
-    bmi DECIMAL(5,2),
-    body_fat DECIMAL(5,2),
-    muscle_mass DECIMAL(5,2),
-    record_date DATE,
+    weight DECIMAL(5,2) CHECK (weight > 0),
+    bmi DECIMAL(5,2) CHECK (bmi > 0),
+    body_fat DECIMAL(5,2) CHECK (body_fat >= 0),
+    muscle_mass DECIMAL(5,2) CHECK (muscle_mass >= 0),
+    record_date DATE DEFAULT GETDATE(),
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
 );
 
@@ -136,6 +129,9 @@ CREATE TABLE fitness_goals (
     target_value VARCHAR(50),
     start_date DATE,
     target_date DATE,
+
+    CONSTRAINT chk_goal_dates CHECK (target_date > start_date),
+
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
 );
 
@@ -145,7 +141,7 @@ CREATE TABLE classes (
     trainer_id INT,
     schedule_date DATE,
     schedule_time TIME,
-    capacity INT,
+    capacity INT CHECK (capacity > 0),
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
 );
 
@@ -160,9 +156,9 @@ CREATE TABLE class_enrollments (
 CREATE TABLE equipment (
     equipment_id INT PRIMARY KEY IDENTITY(1,1),
     equipment_name VARCHAR(100),
-    quantity INT,
+    quantity INT CHECK (quantity >= 0),
     purchase_date DATE,
-    status VARCHAR(50)
+    status VARCHAR(50) CHECK (status IN ('available','in_use','maintenance'))
 );
 
 CREATE TABLE equipment_maintenance (

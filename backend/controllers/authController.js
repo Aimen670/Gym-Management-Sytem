@@ -1,4 +1,4 @@
-const { createMember, getMemberByEmail } = require('../models/authModel');
+const { createMember, getMemberByEmail, getMemberPasswordByEmail } = require('../models/authModel');
 
 async function signup(req, res) {
     try {
@@ -13,16 +13,17 @@ async function signup(req, res) {
             full_name,
             email,
             password,
-            phone: phone || '',
-            age: age || 0,
-            gender: gender || '',
-            fitness_goal: fitness_goal || ''
+            phone: phone || null,
+            age: age || null,
+            gender: gender || null,
+            fitness_goal: fitness_goal || null
         });
 
         res.status(201).json(result);
     } catch (err) {
         console.error('Signup error:', err);
-        res.status(400).json({ error: err.message });
+        const statusCode = err.message.includes('already') ? 409 : 400;
+        res.status(statusCode).json({ error: err.message });
     }
 }
 
@@ -34,15 +35,16 @@ async function login(req, res) {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        const user = await getMemberByEmail(email);
+        // Get user with password hash
+        const userWithPassword = await getMemberPasswordByEmail(email);
 
         // Simple password comparison (use bcrypt in production)
-        if (user.password !== password) {
-            return res.status(401).json({ error: 'Invalid password' });
+        if (userWithPassword.password !== password) {
+            return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        // Remove password from response
-        delete user.password;
+        // Get user info without password
+        const user = await getMemberByEmail(email);
 
         res.status(200).json({
             message: 'Login successful',
