@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
-function Signup() {
+function AdminSignup() {
   const [formData, setFormData] = useState({
-    full_name: '',
+    name: '',
     email: '',
     password: '',
-    phone: '',
-    age: '',
-    gender: '',
-    fitness_goal: ''
+    role: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +26,7 @@ function Signup() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
+      const response = await fetch('http://localhost:5000/api/auth/admin-signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,8 +42,8 @@ function Signup() {
         return;
       }
 
-      localStorage.setItem('token', data.token);
-      navigate('/dashboard');
+      localStorage.setItem('adminToken', data.token);
+      navigate('/admin-dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error(err);
@@ -57,19 +54,19 @@ function Signup() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-side auth-info">
+        <div className="auth-side auth-info admin-info">
           <div className="auth-info-content">
-            <h1>Join Our Gym</h1>
-            <p>Create your member account and start your fitness journey today.</p>
+            <h1>Admin Registration</h1>
+            <p>Create your admin account to manage the gym facility.</p>
             <ul>
-              <li>Track your workouts</li>
-              <li>Access trainers</li>
-              <li>Achieve your goals</li>
+              <li>Manage members</li>
+              <li>View analytics</li>
+              <li>Manage staff</li>
             </ul>
             <div className="switch-role">
-              <p>Are you an admin?</p>
-              <Link to="/admin-signup" className="switch-link">
-                Go to Admin Sign Up →
+              <p>Are you a member?</p>
+              <Link to="/signup" className="switch-link">
+                Go to Member Sign Up →
               </Link>
             </div>
           </div>
@@ -77,7 +74,7 @@ function Signup() {
 
         <div className="auth-side auth-panel">
           <div className="auth-box">
-            <h2>Member Sign Up</h2>
+            <h2>Admin Sign Up</h2>
             {error && <div className="error-message">{error}</div>}
 
             <form onSubmit={handleSubmit}>
@@ -85,8 +82,8 @@ function Signup() {
                 <label>Full Name</label>
                 <input
                   type="text"
-                  name="full_name"
-                  value={formData.full_name}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   required
                   placeholder="Enter your full name"
@@ -101,7 +98,7 @@ function Signup() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  placeholder="Enter your email"
+                  placeholder="Enter your admin email"
                 />
               </div>
 
@@ -118,58 +115,28 @@ function Signup() {
               </div>
 
               <div className="form-group">
-                <label>Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
+                <label>Role</label>
+                <select 
+                  name="role" 
+                  value={formData.role} 
                   onChange={handleChange}
-                  placeholder="Enter your phone (11 digits)"
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
-                    onChange={handleChange}
-                    placeholder="Enter your age"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Gender</label>
-                  <select name="gender" value={formData.gender} onChange={handleChange}>
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Fitness Goal</label>
-                <input
-                  type="text"
-                  name="fitness_goal"
-                  value={formData.fitness_goal}
-                  onChange={handleChange}
-                  placeholder="e.g., Weight Loss, Muscle Gain"
-                />
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="manager">Manager</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="staff">Staff</option>
+                </select>
               </div>
 
               <button type="submit" className="auth-button" disabled={loading}>
-                {loading ? 'Signing up...' : 'Sign Up'}
+                {loading ? 'Creating account...' : 'Sign Up'}
               </button>
             </form>
 
             <p className="auth-footer">
               Already have an account?{' '}
-              <Link to="/login" className="auth-link">
+              <Link to="/admin-login" className="auth-link">
                 Login here
               </Link>
             </p>
@@ -180,4 +147,4 @@ function Signup() {
   );
 }
 
-export default Signup;
+export default AdminSignup;

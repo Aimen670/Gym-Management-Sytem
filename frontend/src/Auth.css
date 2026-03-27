@@ -211,6 +211,112 @@
   text-decoration: underline;
 }
 
+/* Admin Auth Styling */
+.admin-info {
+  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+}
+
+/* Auth Box Styling */
+.auth-box {
+  padding: 40px;
+}
+
+.auth-box h2 {
+  margin: 0 0 28px;
+  color: #222859;
+  text-align: center;
+  font-size: 26px;
+}
+
+/* Error Message */
+.error-message {
+  background: #fde8e9;
+  color: #8f1e2f;
+  border: 1px solid #f4b4b8;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Auth Button */
+.auth-button {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5f60f3 0%, #231fb7 100%);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.auth-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(57, 70, 169, 0.35);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Auth Footer */
+.auth-footer {
+  text-align: center;
+  margin-top: 16px;
+  color: #59628d;
+  font-size: 14px;
+}
+
+.auth-link {
+  background: none;
+  border: none;
+  color: #5f60f3;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 4px;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.auth-link:hover {
+  color: #3c57d8;
+  text-decoration: underline;
+}
+
+/* Switch Role Navigation */
+.switch-role {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.switch-role p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #c8cfff;
+}
+
+.switch-link {
+  display: inline-block;
+  color: #a8b3ff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.switch-link:hover {
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
 @media (max-width: 960px) {
   .auth-card { grid-template-columns: 1fr; }
   .auth-side { min-height: auto; }
@@ -219,7 +325,7 @@
 
 @media (max-width: 520px) {
   .auth-panel { padding: 16px; }
-  .auth-box { box-shadow: none; border-radius: 12px; }
+  .auth-box { box-shadow: none; border-radius: 12px; padding: 24px 18px; }
   .auth-form { padding: 24px 18px; }
   .form-row { grid-template-columns: 1fr; }
 }

@@ -2,28 +2,28 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
-function Dashboard() {
+function AdminDashboard() {
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('adminToken');
     window.location.href = '/';
   };
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-card">
-        <div className="dashboard-side dashboard-info">
+      <div className="dashboard-card admin-dashboard">
+        <div className="dashboard-side dashboard-info admin-info-dashboard">
           <div className="dashboard-info-content">
-            <h1>Welcome Back!</h1>
-            <p>You have successfully logged in to your Gym Management Dashboard.</p>
+            <h1>Admin Portal</h1>
+            <p>You have successfully logged in to the Gym Management Admin Dashboard.</p>
             <ul>
-              <li>Track your workouts</li>
-              <li>Monitor your progress</li>
-              <li>Achieve your fitness goals</li>
+              <li>Manage members</li>
+              <li>View reports</li>
+              <li>Manage staff</li>
             </ul>
             <div className="dashboard-switch">
-              <p>Are you an admin?</p>
-              <Link to="/admin-login" className="dashboard-link">
-                Go to Admin Panel →
+              <p>Are you a member?</p>
+              <Link to="/login" className="dashboard-link">
+                Go to Member Area →
               </Link>
             </div>
           </div>
@@ -33,8 +33,8 @@ function Dashboard() {
           <div className="dashboard-box">
             <div className="success-message">
               <div className="success-icon">✓</div>
-              <h2>Login Successful!</h2>
-              <p>You are now logged in to your account.</p>
+              <h2>Admin Login Successful!</h2>
+              <p>You are now logged in to your admin account.</p>
             </div>
 
             <div className="dashboard-content">
@@ -49,4 +49,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default AdminDashboard;

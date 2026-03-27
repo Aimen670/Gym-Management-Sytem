@@ -26,5 +26,6 @@ async function connectToDatabase() {
 
 module.exports = {
     connectToDatabase,
-    sql
+    sql,
+    config: dbConfig
 };

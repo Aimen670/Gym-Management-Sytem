@@ -153,6 +153,42 @@
   box-shadow: 0 8px 20px rgba(238, 90, 82, 0.35);
 }
 
+/* Dashboard Switch Navigation */
+.dashboard-switch {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dashboard-switch p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #c8cfff;
+}
+
+.dashboard-link {
+  display: inline-block;
+  color: #a8b3ff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.dashboard-link:hover {
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+/* Admin Dashboard Styling */
+.admin-dashboard .dashboard-info {
+  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+}
+
+.admin-info-dashboard {
+  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+}
+
 @media (max-width: 960px) {
   .dashboard-card { grid-template-columns: 1fr; }
   .dashboard-side { min-height: auto; }

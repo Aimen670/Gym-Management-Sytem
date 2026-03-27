@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
-function Login() {
+function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +15,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/admin-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,8 +31,8 @@ function Login() {
         return;
       }
 
-      localStorage.setItem('token', data.token);
-      navigate('/dashboard');
+      localStorage.setItem('adminToken', data.token);
+      navigate('/admin-dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error(err);
@@ -43,19 +43,19 @@ function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-side auth-info">
+        <div className="auth-side auth-info admin-info">
           <div className="auth-info-content">
-            <h1>Welcome Back!</h1>
-            <p>Log in to your member account and access your fitness journey.</p>
+            <h1>Admin Portal</h1>
+            <p>Log in to your admin account and manage the gym.</p>
             <ul>
-              <li>Track your workouts</li>
-              <li>Monitor your progress</li>
-              <li>Achieve your fitness goals</li>
+              <li>Manage members</li>
+              <li>View reports</li>
+              <li>Manage staff</li>
             </ul>
             <div className="switch-role">
-              <p>Are you an admin?</p>
-              <Link to="/admin-login" className="switch-link">
-                Go to Admin Login →
+              <p>Are you a member?</p>
+              <Link to="/login" className="switch-link">
+                Go to Member Login →
               </Link>
             </div>
           </div>
@@ -63,7 +63,7 @@ function Login() {
 
         <div className="auth-side auth-panel">
           <div className="auth-box">
-            <h2>Member Login</h2>
+            <h2>Admin Login</h2>
             {error && <div className="error-message">{error}</div>}
 
             <form onSubmit={handleSubmit}>
@@ -74,7 +74,7 @@ function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="Enter your email"
+                  placeholder="Enter your admin email"
                 />
               </div>
 
@@ -96,7 +96,7 @@ function Login() {
 
             <p className="auth-footer">
               Don't have an account?{' '}
-              <Link to="/signup" className="auth-link">
+              <Link to="/admin-signup" className="auth-link">
                 Sign up here
               </Link>
             </p>
@@ -107,4 +107,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default AdminLogin;

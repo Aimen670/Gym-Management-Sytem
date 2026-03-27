@@ -16,7 +16,8 @@ CREATE TABLE admins (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE CHECK (email LIKE '%@%.%'),
     password VARCHAR(255) NOT NULL CHECK (LEN(password) >= 6),
-    role VARCHAR(50) CHECK (role IN ('manager','supervisor','staff'))
+    role VARCHAR(50) CHECK (role IN ('manager','supervisor','staff')),
+    created_at DATETIME2 DEFAULT GETDATE()
 );
 
 CREATE TABLE trainers (
@@ -171,27 +172,39 @@ CREATE TABLE equipment_maintenance (
 
 
 
-INSERT INTO members VALUES
-('ali khan',25,'male','03001234567','ali.khan@email.com','testpass123','muscle gain','2025-01-10','active'),
-('ahmed raza',30,'male','03011234567','ahmed.raza@email.com','testpass123','weight loss','2025-02-15','active'),
-('fatima noor',27,'female','03121234567','fatima.noor@email.com','testpass123','fitness','2025-03-01','active'),
-('ayesha malik',22,'female','03221234567','ayesha.malik@email.com','testpass123','weight loss','2025-02-20','active');
+-- Members Data
+INSERT INTO members (full_name, age, gender, phone, email, password, fitness_goal, join_date, status) VALUES
+('Ali Khan', 25, 'male', '03001234567', 'ali.khan@email.com', 'testpass123', 'Muscle Gain', '2025-01-10', 'active'),
+('Ahmed Raza', 30, 'male', '03011234567', 'ahmed.raza@email.com', 'testpass123', 'Weight Loss', '2025-02-15', 'active'),
+('Fatima Noor', 27, 'female', '03121234567', 'fatima.noor@email.com', 'testpass123', 'General Fitness', '2025-03-01', 'active'),
+('Ayesha Malik', 22, 'female', '03221234567', 'ayesha.malik@email.com', 'testpass123', 'Weight Loss', '2025-02-20', 'active'),
+('Hassan Ali', 28, 'male', '03331234567', 'hassan.ali@email.com', 'testpass123', 'Strength Training', '2025-01-05', 'active');
 
-INSERT INTO admins VALUES
-('usman sheikh','usman@gym.com','$2b$admin1','manager'),
-('hassan tariq','hassan@gym.com','$2b$admin2','supervisor');
+-- Admins Data
+INSERT INTO admins (name, email, password, role, created_at) VALUES
+('Usman Sheikh', 'usman@gym.com', 'admin123456', 'manager', GETDATE()),
+('Hassan Tariq', 'hassan@gym.com', 'admin123456', 'supervisor', GETDATE()),
+('Sara Admin', 'sara.admin@gym.com', 'admin123456', 'staff', GETDATE());
 
-INSERT INTO trainers VALUES
-('bilal ahmed','strength training','03331234567','bilal@gym.com',5),
-('sara khan','yoga instructor','03341234567','sara@gym.com',4),
-('hamza ali','cardio specialist','03351234567','hamza@gym.com',6);
+-- Trainers Data
+INSERT INTO trainers (name, specialization, phone, email, experience_years) VALUES
+('Bilal Ahmed', 'Strength Training', '03331234567', 'bilal@gym.com', 5),
+('Sara Khan', 'Yoga Instructor', '03341234567', 'sara@gym.com', 4),
+('Hamza Ali', 'Cardio Specialist', '03351234567', 'hamza@gym.com', 6),
+('Zara Khan', 'Pilates', '03361234567', 'zara@gym.com', 3);
 
-INSERT INTO membership_plans VALUES
-('monthly plan',1,5000,'access to gym equipment'),
-('quarterly plan',3,13000,'access to gym + group classes'),
-('yearly plan',12,45000,'full access including trainer sessions');
+-- Membership Plans Data
+INSERT INTO membership_plans (plan_name, duration_months, price, description) VALUES
+('Monthly Plan', 1, 5000.00, 'Access to gym equipment and facilities'),
+('Quarterly Plan', 3, 13000.00, 'Access to gym + group classes'),
+('Yearly Plan', 12, 45000.00, 'Full access including trainer sessions and diet consultation');
 
-SELECT * FROM members;
-SELECT * FROM admins;
-SELECT * FROM trainers;
-SELECT * FROM membership_plans;
+-- Equipment Data
+INSERT INTO equipment (equipment_name, quantity, purchase_date, status) VALUES
+('Treadmill', 5, '2024-01-15', 'available'),
+('Dumbbells Set', 20, '2024-02-10', 'in_use'),
+('Bench Press', 3, '2024-03-01', 'available'),
+('Rowing Machine', 4, '2024-01-20', 'available'),
+('Barbell', 10, '2024-02-05', 'available'),
+('Weight Plates', 30, '2024-02-15', 'in_use'),
+('Elliptical Machine', 3, '2024-03-10', 'maintenance');
