@@ -1,0 +1,79 @@
+1. Introduction
+The Gym and Health & Fitness Management System is a comprehensive web-based
+application designed to efficiently manage gym operations, member activities, trainer
+schedules, and health tracking within a fitness organization. The system provides a
+centralized digital platform where members can register, subscribe to fitness plans, track
+workouts, monitor progress, and schedule sessions with trainers.Traditional gym
+management often relies on manual records or scattered systems to track memberships,
+payments, workout schedules, and trainer assignments. This approach frequently leads to
+scheduling conflicts, poor record management, payment errors, and difficulty tracking
+member progress. The proposed system addresses these challenges by automating gym
+operations and organizing all data within a structured database environment.By digitalizing
+membership management, trainer scheduling, workout tracking, and payment systems, the
+platform improves operational efficiency, enhances member experience, and ensures
+accurate record keeping. The Gym and Health & Fitness Management System serves as a
+modern, secure, and scalable solution that minimizes manual effort while maximizing
+reliability and data organization in fitness center management.
+2. Functionalities
+The following section contains all the functionalities proposed for this project.
+1-User Functionalities:
+1.1 User Registration and Login
+● Users can create an account by providing personal information such as name, age,
+contact details, and fitness goals.
+● Secure login authentication allows members to access their personal dashboards and
+fitness records.
+1.2 Membership Plan Subscription
+● Users can browse available gym membership plans such as monthly, quarterly, or yearly
+subscriptions.
+● Members can subscribe to plans and the system records plan duration, price, and
+activation dates.
+1.3. Trainer Booking System
+● Members can view available trainers and schedule personal training sessions based on
+trainer availability.
+● The system records session bookings and prevents scheduling conflicts.
+1.4. Workout Plan Management
+● Users can view assigned workout routines created by trainers.
+● Workout plans include exercises, repetitions, sets, and recommended schedules.
+1.5. Diet Plan Tracking
+● Members can access diet plans created by nutritionists or trainers.
+● The system stores meal schedules, calorie targets, and dietary recommendations.
+1.6. Workout Progress Tracking
+● Members can log completed workouts, track exercise performance, and view historical
+workout records.
+● The system stores progress data such as weights lifted, repetitions, and workout
+frequency.
+1.7. Body Measurement Tracking
+● Users can record body metrics such as weight, BMI, body fat percentage, and muscle
+mass.
+● The system maintains historical measurement records to track fitness progress over time.
+1.8. Class Enrollment System
+● Members can enroll in group fitness classes such as yoga, HIIT, or strength training.
+● The system tracks class capacity and manages member enrollment lists.
+1.9. Fitness Goal Management
+● Users can define personal fitness goals such as weight loss, muscle gain, or endurance
+improvement.
+● The system tracks progress toward these goals based on recorded workout and body data.
+2- Admin Functionalities:
+2.1. Admin Login and Role-Based Access Control
+● Administrative access is restricted through role-based authentication to ensure only
+authorized personnel manage system data.
+2.2. Admin Dashboard
+● Provides a centralized overview of gym operations including active members, trainer
+schedules, membership statistics, and system activity.
+2.3. Member Management
+● Admins can view, update, suspend, or manage member accounts and membership status.
+2.4. Trainer Management
+● Admins manage trainer profiles including specialization, schedules, assigned members,
+and training session history.
+2.5. Membership Plan Management
+● Admins can create, update, or deactivate membership plans with different pricing,
+benefits, and durations.
+2.6. Payment and Billing Management
+● The system records membership payments, transaction history, and payment methods.
+● Admins can track revenue reports and identify pending or overdue payments.
+2.7. Class and Schedule Management
+● Admins can create group fitness classes, assign trainers, define schedules, and manage
+participant capacity.
+2.8. Equipment and Facility Management
+● Admins track gym equipment inventory, maintenance schedules, and availability to
+ensure proper facility management.

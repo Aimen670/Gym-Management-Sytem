@@ -1,4 +1,4 @@
-const { sql } = require('../db');
+const { sql, getPool } = require('../db');
 
 // Validation helper functions
 function validateEmail(email) {
@@ -61,7 +61,8 @@ async function createMember(memberData) {
         }
 
         // Check if email already exists
-        let request = new sql.Request();
+        const pool = getPool();
+        let request = pool.request();
         request.input('email', sql.VarChar(100), email);
         const checkEmail = await request.query(
             `SELECT email FROM members WHERE email = @email`
@@ -73,7 +74,7 @@ async function createMember(memberData) {
 
         // Check if phone already exists
         if (phone) {
-            request = new sql.Request();
+            request = pool.request();
             request.input('phone', sql.VarChar(20), phone);
             const checkPhone = await request.query(
                 `SELECT phone FROM members WHERE phone = @phone`
@@ -84,7 +85,7 @@ async function createMember(memberData) {
         }
 
         // Insert member using parameterized query
-        request = new sql.Request();
+        request = pool.request();
         request.input('full_name', sql.VarChar(100), full_name);
         request.input('email', sql.VarChar(100), email);
         request.input('password', sql.VarChar(255), password);
@@ -113,7 +114,8 @@ async function getMemberByEmail(email) {
             throw new Error('Invalid email format');
         }
 
-        const request = new sql.Request();
+        const pool = getPool();
+        const request = pool.request();
         request.input('email', sql.VarChar(100), email);
 
         const result = await request.query(
@@ -137,7 +139,8 @@ async function getMemberPasswordByEmail(email) {
             throw new Error('Invalid email format');
         }
 
-        const request = new sql.Request();
+        const pool = getPool();
+        const request = pool.request();
         request.input('email', sql.VarChar(100), email);
 
         const result = await request.query(

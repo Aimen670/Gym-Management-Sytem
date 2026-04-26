@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 15% 15%, #5e50f9 0%, #2d2b87 45%, #111262 100%);
+  background: radial-gradient(circle at 15% 15%, #28c7b6 0%, #0f3e41 35%, #081214 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
 }
@@ -16,7 +16,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: #fff;
+  background: #0b1517;
 }
 
 .dashboard-side {
@@ -27,8 +27,8 @@
 }
 
 .dashboard-info {
-  background: linear-gradient(145deg, #1f1e74 0%, #2d2b87 60%, #4637bf 100%);
-  color: #e9ecff;
+  background: linear-gradient(145deg, #0c3b3f 0%, #0a2a2d 60%, #071416 100%);
+  color: #d7fffb;
 }
 
 .dashboard-info-content {
@@ -45,7 +45,7 @@
 .dashboard-info-content p {
   margin-bottom: 25px;
   font-size: 16px;
-  color: #dddeff;
+  color: #bde9e4;
   line-height: 1.5;
 }
 
@@ -53,7 +53,7 @@
   list-style: disc;
   padding-left: 20px;
   margin: 0;
-  color: #d8dbff;
+  color: #b2e4df;
 }
 
 .dashboard-info-content li {
@@ -62,7 +62,7 @@
 }
 
 .dashboard-panel {
-  background: #f6f8ff;
+  background: #0b1517;
   padding: 30px;
 }
 
@@ -70,7 +70,7 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  background: #ffffff;
+  background: #101e20;
   border-radius: 14px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -81,34 +81,119 @@
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: #e3f1e8;
+  background: rgba(68, 240, 218, 0.12);
   border-radius: 12px;
-  border: 1px solid #a7d8b3;
+  border: 1px solid rgba(68, 240, 218, 0.35);
 }
 
 .success-icon {
   font-size: 48px;
-  color: #166b37;
+  color: #44f0da;
   margin-bottom: 10px;
 }
 
 .success-message h2 {
   margin: 0 0 10px;
-  color: #166b37;
+  color: #e6fffb;
   font-size: 24px;
 }
 
 .success-message p {
   margin: 0;
-  color: #166b37;
+  color: #b9eae5;
   font-size: 16px;
 }
 
 .dashboard-content h3 {
   margin: 0 0 20px;
-  color: #222859;
+  color: #e6fffb;
   text-align: center;
   font-size: 22px;
+}
+
+.trainer-section {
+  margin-bottom: 24px;
+}
+
+.trainer-section h3 {
+  margin: 0 0 8px;
+  color: #e6fffb;
+  text-align: center;
+  font-size: 22px;
+}
+
+.trainer-subtitle {
+  margin: 0 0 18px;
+  text-align: center;
+  color: #a7dcd6;
+  font-size: 14px;
+}
+
+.trainer-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.trainer-input {
+  border: 1px solid #1b3c40;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #0b1517;
+  color: #e6fffb;
+}
+
+.trainer-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.trainer-list {
+  display: grid;
+  gap: 12px;
+}
+
+.trainer-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #1b3c40;
+  background: #0b1517;
+  color: #e6fffb;
+}
+
+.trainer-card h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.trainer-card p {
+  margin: 0 0 8px;
+  color: #a7dcd6;
+  font-size: 13px;
+}
+
+.trainer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #a7dcd6;
+  font-size: 12px;
+}
+
+.trainer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trainer-empty {
+  text-align: center;
+  color: #a7dcd6;
+  font-size: 14px;
 }
 
 .action-buttons {
@@ -121,18 +206,28 @@
 .action-btn {
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #d7def6;
-  background: #f7f9ff;
-  color: #59628d;
+  border: 1px solid rgba(68, 240, 218, 0.35);
+  background: rgba(68, 240, 218, 0.12);
+  color: #e6fffb;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
+.action-btn.secondary {
+  background: transparent;
+}
+
+.action-btn.danger {
+  border-color: rgba(255, 120, 120, 0.5);
+  background: rgba(255, 120, 120, 0.15);
+  color: #ffb6b6;
+}
+
 .action-btn:hover {
-  background: #eef3ff;
-  border-color: #6f7ffc;
-  color: #3c57d8;
+  background: rgba(68, 240, 218, 0.25);
+  border-color: rgba(68, 240, 218, 0.6);
+  color: #e6fffb;
 }
 
 .logout-btn {
@@ -141,7 +236,7 @@
   border-radius: 10px;
   border: none;
   color: #ffffff;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  background: linear-gradient(135deg, #44f0da 0%, #11a49c 100%);
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -150,25 +245,25 @@
 
 .logout-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(238, 90, 82, 0.35);
+  box-shadow: 0 8px 20px rgba(17, 164, 156, 0.35);
 }
 
 /* Dashboard Switch Navigation */
 .dashboard-switch {
   margin-top: 40px;
   padding-top: 30px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(68, 240, 218, 0.2);
 }
 
 .dashboard-switch p {
   margin: 0 0 12px;
   font-size: 14px;
-  color: #c8cfff;
+  color: #b9eae5;
 }
 
 .dashboard-link {
   display: inline-block;
-  color: #a8b3ff;
+  color: #44f0da;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -176,17 +271,78 @@
 }
 
 .dashboard-link:hover {
-  color: #ffffff;
+  color: #dcfffa;
   transform: translateX(4px);
 }
 
 /* Admin Dashboard Styling */
 .admin-dashboard .dashboard-info {
-  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+  background: linear-gradient(145deg, #0c2f34 0%, #103d40 60%, #14545a 100%);
 }
 
 .admin-info-dashboard {
-  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+  background: linear-gradient(145deg, #0c2f34 0%, #103d40 60%, #14545a 100%);
+}
+
+.admin-theme .dashboard-card {
+  max-width: 1200px;
+}
+
+.admin-full .dashboard-box {
+  max-width: 720px;
+}
+
+.admin-section {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(68, 240, 218, 0.2);
+}
+
+.admin-section-header h3 {
+  margin: 0 0 6px;
+  color: #e6fffb;
+  font-size: 20px;
+}
+
+.admin-section-header p {
+  margin: 0 0 16px;
+  color: #a7dcd6;
+  font-size: 13px;
+}
+
+.admin-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-form textarea.trainer-input {
+  resize: vertical;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.admin-stat {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(68, 240, 218, 0.25);
+  background: rgba(8, 18, 20, 0.6);
+  color: #e6fffb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-stat span {
+  font-size: 12px;
+  color: #a7dcd6;
+}
+
+.admin-stat strong {
+  font-size: 20px;
 }
 
 @media (max-width: 960px) {

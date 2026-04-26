@@ -1,8 +1,9 @@
-const { sql } = require('../db');
+const { getPool } = require('../db');
 
 async function getAllData() {
     try {
-        const result = await sql.query('SELECT * FROM members');
+        const pool = getPool();
+        const result = await pool.request().query('SELECT * FROM members');
         return result.recordset;
     } catch (err) {
         console.error('Query failed:', err);

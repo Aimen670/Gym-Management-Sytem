@@ -1,5 +1,6 @@
+const path = require('path');
 const sql = require('mssql');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 // Database configuration
 const dbConfig = {
@@ -14,18 +15,33 @@ const dbConfig = {
     }
 };
 
+let pool;
+
 // Connect to database
 async function connectToDatabase() {
     try {
-        await sql.connect(dbConfig);
+        if (pool) {
+            return pool;
+        }
+        pool = await sql.connect(dbConfig);
         console.log('Connected to SQL Server database');
+        return pool;
     } catch (err) {
         console.error('Database connection failed:', err);
+        throw err;
     }
+}
+
+function getPool() {
+    if (!pool) {
+        throw new Error('Database not connected');
+    }
+    return pool;
 }
 
 module.exports = {
     connectToDatabase,
+    getPool,
     sql,
     config: dbConfig
 };

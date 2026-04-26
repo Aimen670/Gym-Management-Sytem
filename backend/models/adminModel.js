@@ -1,4 +1,4 @@
-const { sql } = require('../db');// Import the sql object from the db module to interact with the database
+const { sql, getPool } = require('../db');// Import the sql object from the db module to interact with the database
 
 // Validation functions
 function validateEmail(email) {
@@ -40,7 +40,8 @@ async function createAdmin({ name, email, password, role }) {
 
     try {
         // Check if admin email already exists
-        let request = new sql.Request();// Create a new SQL request object to execute queries against the database
+        const pool = getPool();
+        let request = pool.request();// Create a new SQL request object to execute queries against the database
         request.input('email', sql.VarChar(100), email);// Add the email parameter to the SQL request with the appropriate data type and value
         const checkResult = await request.query('SELECT * FROM admins WHERE email = @email');
         // Execute a SQL query to check if an admin with the provided email already exists in the admins table.
@@ -53,7 +54,7 @@ async function createAdmin({ name, email, password, role }) {
         }
 
         // Insert new admin
-        request = new sql.Request();
+        request = pool.request();
         request.input('name', sql.VarChar(100), name);
         request.input('email', sql.VarChar(100), email);
         request.input('password', sql.VarChar(255), password);
@@ -86,7 +87,8 @@ async function createAdmin({ name, email, password, role }) {
 // Get admin by email (without password)
 async function getAdminByEmail(email) {
     try {
-        let request = new sql.Request();
+        const pool = getPool();
+        let request = pool.request();
         request.input('email', sql.VarChar(100), email);
         const result = await request.query('SELECT admin_id, name, email, role, created_at FROM admins WHERE email = @email');
 
@@ -104,7 +106,8 @@ async function getAdminByEmail(email) {
 // Get admin password by email (for login verification)
 async function getAdminPasswordByEmail(email) {
     try {
-        let request = new sql.Request();
+        const pool = getPool();
+        let request = pool.request();
         request.input('email', sql.VarChar(100), email);
         const result = await request.query('SELECT admin_id, email, password FROM admins WHERE email = @email');
 
