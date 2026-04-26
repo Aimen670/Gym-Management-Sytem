@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 15% 15%, #5e50f9 0%, #2d2b87 45%, #111262 100%);
+  background: radial-gradient(circle at 15% 15%, #28c7b6 0%, #0f3e41 35%, #081214 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
 }
@@ -16,7 +16,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: #fff;
+  background: #0b1517;
 }
 
 .auth-side {
@@ -27,8 +27,8 @@
 }
 
 .auth-info {
-  background: linear-gradient(145deg, #1f1e74 0%, #2d2b87 60%, #4637bf 100%);
-  color: #e9ecff;
+  background: linear-gradient(145deg, #0c3b3f 0%, #0a2a2d 55%, #071416 100%);
+  color: #d7fffb;
 }
 
 .auth-info-content {
@@ -45,7 +45,7 @@
 .auth-info-content p {
   margin-bottom: 25px;
   font-size: 16px;
-  color: #dddeff;
+  color: #bde9e4;
   line-height: 1.5;
 }
 
@@ -53,7 +53,7 @@
   list-style: disc;
   padding-left: 20px;
   margin: 0;
-  color: #d8dbff;
+  color: #b2e4df;
 }
 
 .auth-info-content li {
@@ -62,7 +62,7 @@
 }
 
 .auth-panel {
-  background: #f6f8ff;
+  background: #0b1517;
   padding: 30px;
 }
 
@@ -70,7 +70,7 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  background: #ffffff;
+  background: #101e20;
   border-radius: 14px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
   overflow: hidden;
@@ -78,8 +78,8 @@
 
 .auth-tabs {
   display: flex;
-  background: #eef3ff;
-  border-bottom: 2px solid #d4defc;
+  background: #0b1b1d;
+  border-bottom: 2px solid #143033;
 }
 
 .tab-btn {
@@ -89,19 +89,19 @@
   border: none;
   font-size: 16px;
   font-weight: 600;
-  color: #6d7cb7;
+  color: #9bdad3;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .tab-btn.active {
-  color: #2b43d0;
-  background: #ffffff;
-  border-bottom: 3px solid #5f60f3;
+  color: #041214;
+  background: #44f0da;
+  border-bottom: 3px solid #1dc6b5;
 }
 
 .tab-btn:hover {
-  color: #3c57d8;
+  color: #44f0da;
 }
 
 .auth-form {
@@ -110,7 +110,7 @@
 
 .auth-form h2 {
   margin: 0 0 28px;
-  color: #222859;
+  color: #e6fffb;
   text-align: center;
   font-size: 26px;
 }
@@ -128,7 +128,7 @@
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #59628d;
+  color: #b9eae5;
   font-weight: 600;
   font-size: 13px;
 }
@@ -137,12 +137,12 @@
 .form-group select,
 .form-group textarea {
   width: 100%;
-  border: 1px solid #d7def6;
+  border: 1px solid #1b3c40;
   border-radius: 8px;
   padding: 11px;
   font-size: 14px;
-  background: #f7f9ff;
-  color: #000;
+  background: #0b1517;
+  color: #e6fffb;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -150,8 +150,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #6f7ffc;
-  box-shadow: 0 0 0 4px rgba(101, 114, 255, 0.18);
+  border-color: #44f0da;
+  box-shadow: 0 0 0 4px rgba(68, 240, 218, 0.18);
 }
 
 .message {
@@ -171,7 +171,7 @@
   border-radius: 10px;
   border: none;
   color: #ffffff;
-  background: linear-gradient(135deg, #5f60f3 0%, #231fb7 100%);
+  background: linear-gradient(135deg, #44f0da 0%, #11a49c 100%);
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -180,7 +180,7 @@
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(57, 70, 169, 0.35);
+  box-shadow: 0 8px 20px rgba(17, 164, 156, 0.35);
 }
 
 .submit-btn:disabled {
@@ -191,14 +191,14 @@
 .auth-toggle {
   text-align: center;
   margin-top: 16px;
-  color: #59628d;
+  color: #a7dcd6;
   font-size: 14px;
 }
 
 .toggle-link {
   background: none;
   border: none;
-  color: #5f60f3;
+  color: #44f0da;
   font-weight: 600;
   cursor: pointer;
   padding: 0 4px;
@@ -207,13 +207,13 @@
 }
 
 .toggle-link:hover {
-  color: #3c57d8;
+  color: #24c9b7;
   text-decoration: underline;
 }
 
 /* Admin Auth Styling */
 .admin-info {
-  background: linear-gradient(145deg, #1a3a52 0%, #2d4a6f 60%, #3d5a8f 100%);
+  background: linear-gradient(145deg, #0c2f34 0%, #103d40 60%, #14545a 100%);
 }
 
 /* Auth Box Styling */
@@ -223,7 +223,7 @@
 
 .auth-box h2 {
   margin: 0 0 28px;
-  color: #222859;
+  color: #e6fffb;
   text-align: center;
   font-size: 26px;
 }
@@ -247,7 +247,7 @@
   border-radius: 10px;
   border: none;
   color: #ffffff;
-  background: linear-gradient(135deg, #5f60f3 0%, #231fb7 100%);
+  background: linear-gradient(135deg, #44f0da 0%, #11a49c 100%);
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -258,7 +258,7 @@
 
 .auth-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(57, 70, 169, 0.35);
+  box-shadow: 0 8px 20px rgba(17, 164, 156, 0.35);
 }
 
 .auth-button:disabled {
@@ -270,14 +270,14 @@
 .auth-footer {
   text-align: center;
   margin-top: 16px;
-  color: #59628d;
+  color: #a7dcd6;
   font-size: 14px;
 }
 
 .auth-link {
   background: none;
   border: none;
-  color: #5f60f3;
+  color: #44f0da;
   font-weight: 600;
   cursor: pointer;
   padding: 0 4px;
@@ -286,7 +286,7 @@
 }
 
 .auth-link:hover {
-  color: #3c57d8;
+  color: #24c9b7;
   text-decoration: underline;
 }
 
@@ -294,18 +294,18 @@
 .switch-role {
   margin-top: 40px;
   padding-top: 30px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(68, 240, 218, 0.2);
 }
 
 .switch-role p {
   margin: 0 0 12px;
   font-size: 14px;
-  color: #c8cfff;
+  color: #b9eae5;
 }
 
 .switch-link {
   display: inline-block;
-  color: #a8b3ff;
+  color: #44f0da;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -313,7 +313,7 @@
 }
 
 .switch-link:hover {
-  color: #ffffff;
+  color: #dcfffa;
   transform: translateX(4px);
 }
 
@@ -345,13 +345,13 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: #ffffff;   
+  background: #0b1517;   
   border: none;          
   outline: none;        
   cursor: pointer;
   font-size: 16px;
   padding: 4px 6px;
-  color: #59628d;       
+  color: #a7dcd6;       
   transition: background 0.25s ease, color 0.25s ease;
 }
 
@@ -359,13 +359,13 @@
 .eye-btn:focus {
   outline: none !important;
   box-shadow: none !important;
-  background: #ffffff;   
-  color: #59628d;       
+  background: #0b1517;   
+  color: #a7dcd6;       
 }
 
 .eye-btn:hover {
-  background: #ffffff;   
-  color: #2b43d0;       
+  background: #0b1517;   
+  color: #44f0da;       
 }
 
 

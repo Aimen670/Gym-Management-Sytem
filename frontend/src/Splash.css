@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Space+Grotesk:wght@400;600&display=swap');
+
+.splash-page {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background: radial-gradient(circle at top left, #28c7b6 0%, #0e3b3f 32%, #091416 62%, #050909 100%);
+  overflow: hidden;
+  padding: 32px 16px;
+}
+
+.splash-page::before,
+.splash-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.splash-page::before {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(68, 240, 218, 0.18), transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(68, 240, 218, 0.12), transparent 45%),
+    radial-gradient(circle at 70% 80%, rgba(68, 240, 218, 0.14), transparent 48%);
+  opacity: 0.9;
+}
+
+.splash-page::after {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(68, 240, 218, 0.04) 0,
+    rgba(68, 240, 218, 0.04) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+
+.splash-orbit {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 1px dashed rgba(40, 199, 182, 0.45);
+  top: -120px;
+  right: -120px;
+  animation: orbit 12s linear infinite;
+  opacity: 0.8;
+}
+
+.splash-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(40, 199, 182, 0.5), rgba(40, 199, 182, 0));
+  bottom: -120px;
+  left: -100px;
+  filter: blur(10px);
+  opacity: 0.9;
+}
+
+.splash-card {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+  width: 100%;
+  background: rgba(6, 12, 13, 0.82);
+  border-radius: 28px;
+  padding: 40px 36px 32px;
+  color: #e6fffb;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: floatIn 0.9s ease both;
+}
+
+.splash-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(68, 240, 218, 0.16), transparent 40%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.splash-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  font-size: 12px;
+  color: rgba(196, 250, 244, 0.7);
+  margin-bottom: 12px;
+}
+
+.splash-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(2.8rem, 6vw, 4.2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 12px;
+  text-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.splash-subtitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(214, 255, 252, 0.84);
+  margin: 0 0 28px;
+}
+
+.splash-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.splash-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.splash-btn.primary {
+  background: linear-gradient(135deg, #44f0da 0%, #11a49c 70%);
+  color: #041214;
+  box-shadow: 0 12px 24px rgba(17, 164, 156, 0.35);
+}
+
+.splash-btn.ghost {
+  border: 1px solid rgba(68, 240, 218, 0.4);
+  color: #dcfffa;
+  background: rgba(5, 15, 16, 0.45);
+}
+
+.splash-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+}
+
+.splash-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  color: rgba(196, 250, 244, 0.7);
+  font-size: 0.95rem;
+}
+
+.splash-link {
+  color: #44f0da;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.splash-link:hover {
+  text-decoration: underline;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-orbit {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .splash-card {
+    padding: 32px 24px;
+  }
+
+  .splash-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

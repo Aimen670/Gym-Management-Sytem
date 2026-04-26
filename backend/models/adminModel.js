@@ -1,4 +1,4 @@
-const { sql } = require('../db');
+const { sql } = require('../db');// Import the sql object from the db module to interact with the database
 
 // Validation functions
 function validateEmail(email) {
@@ -40,11 +40,15 @@ async function createAdmin({ name, email, password, role }) {
 
     try {
         // Check if admin email already exists
-        let request = new sql.Request();
-        request.input('email', sql.VarChar(100), email);
+        let request = new sql.Request();// Create a new SQL request object to execute queries against the database
+        request.input('email', sql.VarChar(100), email);// Add the email parameter to the SQL request with the appropriate data type and value
         const checkResult = await request.query('SELECT * FROM admins WHERE email = @email');
+        // Execute a SQL query to check if an admin with the provided email already exists in the admins table.
+        //  The @email parameter is used to prevent SQL injection attacks by safely parameterizing the query.
 
-        if (checkResult.recordset.length > 0) {
+        if (checkResult.recordset.length > 0) {// If the query returns any records, 
+        // it means an admin with that email already exists,
+        //  so we throw an error to prevent duplicate entries.
             throw new Error('Admin with this email already exists');
         }
 
@@ -59,9 +63,11 @@ async function createAdmin({ name, email, password, role }) {
             INSERT INTO admins (name, email, password, role, created_at)
             VALUES (@name, @email, @password, @role, GETDATE());
             SELECT SCOPE_IDENTITY() as admin_id;
-        `);
+        `);// Execute a SQL query to insert the new admin into the admins table.
+        // The query also retrieves the newly generated admin_id using SCOPE_IDENTITY()
+        //  to return it in the response.
 
-        const admin_id = insertResult.recordset[0].admin_id;
+        const admin_id = insertResult.recordset[0].admin_id;// 
 
         return {
             message: 'Admin created successfully',

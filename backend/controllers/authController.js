@@ -1,4 +1,4 @@
-const { createMember, getMemberByEmail, getMemberPasswordByEmail } = require('../models/authModel');
+const { createMember, getMemberByEmail, getMemberPasswordByEmail } = require('../models/authModel');//
 
 async function signup(req, res) {
     try {

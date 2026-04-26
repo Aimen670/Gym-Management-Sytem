@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 require('dotenv').config();
 const { connectToDatabase } = require('./db');
-const dataRoutes = require('./routes/dataRoutes');
+const dataRoutes = require('./routes/dataRoutes');// import dataRoutes to handle data-related API endpoints
 const authRoutes = require('./routes/authRoutes');
 
 const PORT = process.env.PORT || 5000;
