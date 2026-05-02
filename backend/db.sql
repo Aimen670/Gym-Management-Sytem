@@ -136,6 +136,8 @@ CREATE TABLE fitness_goals (
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
 );
 
+-- Classes represent group fitness sessions created by admins.
+-- Admins can assign a trainer, define a schedule, and set a maximum participant capacity.
 CREATE TABLE classes (
     class_id INT PRIMARY KEY IDENTITY(1,1),
     class_name VARCHAR(100),
@@ -144,6 +146,18 @@ CREATE TABLE classes (
     schedule_time TIME,
     capacity INT CHECK (capacity > 0),
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
+);
+
+-- Junction table linking classes to membership plans
+-- This allows each class to be associated with multiple plans
+-- Admins can specify which membership plans include access to a specific class
+CREATE TABLE class_plans (
+    class_plan_id INT PRIMARY KEY IDENTITY(1,1),
+    class_id INT NOT NULL,
+    plan_id INT NOT NULL,
+    UNIQUE (class_id, plan_id),
+    FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (plan_id) REFERENCES membership_plans(plan_id) ON DELETE CASCADE
 );
 
 CREATE TABLE class_enrollments (

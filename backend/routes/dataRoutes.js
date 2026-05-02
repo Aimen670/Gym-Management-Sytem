@@ -1,34 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { getDataHandler } = require('../controllers/dataController');
 
-// TEMP TEST ROUTES (add these first)
-
-router.get('/admin/overview', (req, res) => {
-    res.json({ message: 'Overview working' });
-});
-
-router.get('/admin/members', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/plans', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/classes', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/equipment', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/payments', (req, res) => {
-    res.json([]);
-});
-
-router.get('/trainers', (req, res) => {
-    res.json([]);
-});
+// GET all data from members  (used to test if database connected )
+router.get('/data', getDataHandler);
 
 module.exports = router;
+// This file defines the routes for data-related API endpoints. 
+// It imports the getDataHandler function from the dataController 
+// and sets up a GET route at /api/data to retrieve all data from the members table.
