@@ -13,6 +13,51 @@ async function getAllMembers() {
     return result.recordset;
 }
 
+async function createMember(payload) {
+    const {
+        full_name,
+        email,
+        phone,
+        age,
+        gender,
+        password,
+        fitness_goal,
+        status
+    } = payload;
+
+    if (!full_name || !email || !password) {
+        throw new Error('Full name, email, and password are required');
+    }
+
+    if (status && !validateStatus(status)) {
+        throw new Error('Invalid status');
+    }
+
+    const pool = getPool();
+    const request = pool.request();
+    request.input('full_name', sql.VarChar(100), full_name);
+    request.input('email', sql.VarChar(100), email);
+    request.input('phone', sql.VarChar(20), phone || null);
+    request.input('age', sql.Int, age === '' || age === undefined ? null : age);
+    request.input('gender', sql.VarChar(10), gender || null);
+    request.input('password', sql.VarChar(255), password);
+    request.input('fitness_goal', sql.Text, fitness_goal || null);
+    request.input('status', sql.VarChar(20), status || 'active');
+
+    const insertResult = await request.query(`
+        INSERT INTO members (full_name, email, phone, age, gender, password, fitness_goal, status)
+        OUTPUT INSERTED.member_id
+        VALUES (@full_name, @email, @phone, @age, @gender, @password, @fitness_goal, @status)
+    `);
+
+    const memberId = insertResult.recordset[0].member_id;
+    const result = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query('SELECT member_id, full_name, email, phone, age, gender, fitness_goal, status, join_date FROM members WHERE member_id = @member_id');
+
+    return result.recordset[0];
+}
+
 async function updateMember(memberId, updates) {
     const {
         full_name,
@@ -62,7 +107,20 @@ async function updateMember(memberId, updates) {
     return result.recordset[0];
 }
 
+async function deleteMember(memberId) {
+    const pool = getPool();
+    const result = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query('DELETE FROM members WHERE member_id = @member_id');
+
+    if (!result.rowsAffected || result.rowsAffected[0] === 0) {
+        throw new Error('Member not found');
+    }
+}
+
 module.exports = {
     getAllMembers,
-    updateMember
+    createMember,
+    updateMember,
+    deleteMember
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getMembers, updateMemberHandler } = require('../controllers/memberController');
+const { getMembers, createMemberHandler, updateMemberHandler, deleteMemberHandler } = require('../controllers/memberController');
 const {
     getPlansHandler,
     createPlanHandler,
@@ -25,7 +25,9 @@ const { getAdminOverview } = require('../controllers/adminOverviewController');
 router.get('/admin/overview', getAdminOverview);
 
 router.get('/admin/members', getMembers);
+router.post('/admin/members', createMemberHandler);
 router.put('/admin/members/:id', updateMemberHandler);
+router.delete('/admin/members/:id', deleteMemberHandler);
 
 router.get('/admin/plans', getPlansHandler);
 router.post('/admin/plans', createPlanHandler);

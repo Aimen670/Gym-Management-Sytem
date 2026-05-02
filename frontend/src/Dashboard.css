@@ -411,6 +411,10 @@
   margin-top: 24px;
 }
 
+.admin-grid-layout.admin-grid-single {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 1024px) {
   .admin-grid-layout {
     grid-template-columns: 1fr;
@@ -458,6 +462,31 @@
 
 .admin-form-input::placeholder {
   color: #666666;
+}
+
+.admin-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-password-wrapper .admin-form-input {
+  padding-right: 46px;
+}
+
+.admin-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #b9eae5;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+.admin-eye-btn:hover {
+  color: #44f0da;
 }
 
 /* Admin Buttons */

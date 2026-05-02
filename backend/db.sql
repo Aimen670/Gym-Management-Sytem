@@ -209,4 +209,28 @@ INSERT INTO equipment (equipment_name, quantity, purchase_date, status) VALUES
 ('Weight Plates', 30, '2024-02-15', 'in_use'),
 ('Elliptical Machine', 3, '2024-03-10', 'maintenance');
 
+-- Member Management (admin view/add/update/suspend)
+-- Fetch members for admin list
+SELECT member_id, full_name, email, phone, age, gender, fitness_goal, status, join_date
+FROM members
+ORDER BY member_id DESC;
+
+-- Add a new member (admin entry)
+INSERT INTO members (full_name, email, phone, age, gender, password, fitness_goal, status)
+VALUES (@full_name, @email, @phone, @age, @gender, @password, @fitness_goal, @status);
+
+-- Update member profile or suspend (set status = 'inactive')
+UPDATE members
+SET full_name = COALESCE(@full_name, full_name),
+    email = COALESCE(@email, email),
+    phone = COALESCE(@phone, phone),
+    age = COALESCE(@age, age),
+    gender = COALESCE(@gender, gender),
+    fitness_goal = COALESCE(@fitness_goal, fitness_goal),
+    status = COALESCE(@status, status)
+WHERE member_id = @member_id;
+
+-- Delete member account
+DELETE FROM members WHERE member_id = @member_id;
+
 

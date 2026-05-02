@@ -7,10 +7,6 @@ router.get('/admin/overview', (req, res) => {
     res.json({ message: 'Overview working' });
 });
 
-router.get('/admin/members', (req, res) => {
-    res.json([]);
-});
-
 router.get('/admin/plans', (req, res) => {
     res.json([]);
 });

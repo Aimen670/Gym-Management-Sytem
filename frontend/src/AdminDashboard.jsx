@@ -59,9 +59,12 @@ function AdminDashboard() {
   const [editingClassId, setEditingClassId] = useState(null);
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
+  const [showMemberForm, setShowMemberForm] = useState(false);
+  const [showMemberPassword, setShowMemberPassword] = useState(false);
   const [memberForm, setMemberForm] = useState({
     full_name: '',
     email: '',
+    password: '',
     phone: '',
     age: '',
     gender: '',
@@ -74,9 +77,15 @@ function AdminDashboard() {
 
   const fetchJson = async (url, options) => {
     const response = await fetch(url, options);
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    const data = isJson ? await response.json() : null;
     if (!response.ok) {
-      throw new Error(data.error || 'Request failed');
+      const fallback = isJson ? data?.error : `Request failed (${response.status})`;
+      throw new Error(fallback || 'Request failed');
+    }
+    if (!isJson) {
+      throw new Error('Server did not return JSON');
     }
     return data;
   };
@@ -145,9 +154,11 @@ function AdminDashboard() {
 
   const handleMemberEdit = (member) => {
     setEditingMemberId(member.member_id);
+    setShowMemberForm(true);
     setMemberForm({
       full_name: member.full_name || '',
       email: member.email || '',
+      password: '',
       phone: member.phone || '',
       age: member.age ?? '',
       gender: member.gender || '',
@@ -158,24 +169,58 @@ function AdminDashboard() {
 
   const handleMemberSave = async (e) => {
     e.preventDefault();
-    if (!editingMemberId) {
-      return;
-    }
     setLoading(true);
     setError('');
     try {
-      const data = await fetchJson(`http://localhost:5000/api/admin/members/${editingMemberId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memberForm)
-      });
-      setMembers((prev) => prev.map((m) => (m.member_id === data.member_id ? data : m)));
-      setEditingMemberId(null);
+      if (editingMemberId) {
+        const data = await fetchJson(`http://localhost:5000/api/admin/members/${editingMemberId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(memberForm)
+        });
+        setMembers((prev) => prev.map((m) => (m.member_id === data.member_id ? data : m)));
+        setEditingMemberId(null);
+        setShowMemberForm(false);
+        setShowMemberPassword(false);
+      } else {
+        const data = await fetchJson('http://localhost:5000/api/admin/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(memberForm)
+        });
+        setMembers((prev) => [data, ...prev]);
+        setMemberForm({
+          full_name: '',
+          email: '',
+          password: '',
+          phone: '',
+          age: '',
+          gender: '',
+          fitness_goal: '',
+          status: 'active'
+        });
+        setShowMemberForm(false);
+        setShowMemberPassword(false);
+      }
     } catch (err) {
       console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMemberDelete = async (memberId) => {
+    if (!window.confirm('Delete this member?')) {
+      return;
+    }
+    setError('');
+    try {
+      await fetchJson(`http://localhost:5000/api/admin/members/${memberId}`, { method: 'DELETE' });
+      setMembers((prev) => prev.filter((m) => m.member_id !== memberId));
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
     }
   };
 
@@ -459,68 +504,132 @@ function AdminDashboard() {
           <div className="admin-section-full">
             <div className="admin-section-header">
               <h2>Member Management</h2>
-              <p>Update member profiles or manage access.</p>
+              <p>View members, update profiles, or manage access.</p>
+              <button
+                className="admin-btn-primary"
+                onClick={() => {
+                  setEditingMemberId(null);
+                  setMemberForm({
+                    full_name: '',
+                    email: '',
+                    password: '',
+                    phone: '',
+                    age: '',
+                    gender: '',
+                    fitness_goal: '',
+                    status: 'active'
+                  });
+                  setShowMemberForm(true);
+                  setShowMemberPassword(false);
+                }}
+              >
+                Add Member
+              </button>
             </div>
-            <div className="admin-grid-layout">
-              <form className="admin-form-panel" onSubmit={handleMemberSave}>
-                <h3>Edit Member</h3>
-                <input
-                  className="admin-form-input"
-                  name="full_name"
-                  value={memberForm.full_name}
-                  onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })}
-                  placeholder="Full name"
-                  required
-                />
-                <input
-                  className="admin-form-input"
-                  name="email"
-                  value={memberForm.email}
-                  onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
-                  placeholder="Email"
-                />
-                <input
-                  className="admin-form-input"
-                  name="phone"
-                  value={memberForm.phone}
-                  onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
-                  placeholder="Phone"
-                />
-                <input
-                  className="admin-form-input"
-                  type="number"
-                  name="age"
-                  value={memberForm.age}
-                  onChange={(e) => setMemberForm({ ...memberForm, age: e.target.value })}
-                  placeholder="Age"
-                />
-                <input
-                  className="admin-form-input"
-                  name="gender"
-                  value={memberForm.gender}
-                  onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
-                  placeholder="Gender"
-                />
-                <input
-                  className="admin-form-input"
-                  name="fitness_goal"
-                  value={memberForm.fitness_goal}
-                  onChange={(e) => setMemberForm({ ...memberForm, fitness_goal: e.target.value })}
-                  placeholder="Fitness goal"
-                />
-                <select
-                  className="admin-form-input"
-                  name="status"
-                  value={memberForm.status}
-                  onChange={(e) => setMemberForm({ ...memberForm, status: e.target.value })}
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                <button className="admin-btn-primary" type="submit" disabled={loading || !editingMemberId}>
-                  {loading ? 'Saving...' : editingMemberId ? 'Update Member' : 'Select a member'}
-                </button>
-              </form>
+            <div className={`admin-grid-layout ${showMemberForm ? '' : 'admin-grid-single'}`}>
+              {showMemberForm && (
+                <form className="admin-form-panel" onSubmit={handleMemberSave}>
+                  <h3>{editingMemberId ? 'Edit Member' : 'Add Member'}</h3>
+                  <input
+                    className="admin-form-input"
+                    name="full_name"
+                    value={memberForm.full_name}
+                    onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })}
+                    placeholder="Full name"
+                    autoComplete="off"
+                    required
+                  />
+                  <input
+                    className="admin-form-input"
+                    name="email"
+                    value={memberForm.email}
+                    onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                    placeholder="Email"
+                    autoComplete="off"
+                    required
+                  />
+                  {!editingMemberId && (
+                    <div className="admin-password-wrapper">
+                      <input
+                        className="admin-form-input"
+                        type={showMemberPassword ? 'text' : 'password'}
+                        name="password"
+                        value={memberForm.password}
+                        onChange={(e) => setMemberForm({ ...memberForm, password: e.target.value })}
+                        placeholder="Password (6+ characters)"
+                        autoComplete="new-password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="admin-eye-btn"
+                        onClick={() => setShowMemberPassword((prev) => !prev)}
+                        aria-label={showMemberPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showMemberPassword ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    className="admin-form-input"
+                    name="phone"
+                    value={memberForm.phone}
+                    onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                    placeholder="Phone"
+                    autoComplete="off"
+                  />
+                  <input
+                    className="admin-form-input"
+                    type="number"
+                    name="age"
+                    value={memberForm.age}
+                    onChange={(e) => setMemberForm({ ...memberForm, age: e.target.value })}
+                    placeholder="Age"
+                    autoComplete="off"
+                  />
+                  <input
+                    className="admin-form-input"
+                    name="gender"
+                    value={memberForm.gender}
+                    onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
+                    placeholder="Gender"
+                    autoComplete="off"
+                  />
+                  <input
+                    className="admin-form-input"
+                    name="fitness_goal"
+                    value={memberForm.fitness_goal}
+                    onChange={(e) => setMemberForm({ ...memberForm, fitness_goal: e.target.value })}
+                    placeholder="Fitness goal"
+                    autoComplete="off"
+                  />
+                  <select
+                    className="admin-form-input"
+                    name="status"
+                    value={memberForm.status}
+                    onChange={(e) => setMemberForm({ ...memberForm, status: e.target.value })}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <div className="admin-card-actions">
+                    <button className="admin-btn-primary" type="submit" disabled={loading}>
+                      {loading ? 'Saving...' : editingMemberId ? 'Update Member' : 'Add Member'}
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn-secondary"
+                      onClick={() => {
+                        setShowMemberForm(false);
+                        setEditingMemberId(null);
+                        setShowMemberPassword(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
 
               <div className="admin-list-panel">
                 <h3>Members</h3>
@@ -537,12 +646,20 @@ function AdminDashboard() {
                           <span className={`status-badge status-${member.status}`}>{member.status}</span>
                         </div>
                       </div>
-                      <button 
-                        className="admin-btn-secondary"
-                        onClick={() => handleMemberEdit(member)}
-                      >
-                        Edit
-                      </button>
+                      <div className="admin-card-actions">
+                        <button 
+                          className="admin-btn-secondary"
+                          onClick={() => handleMemberEdit(member)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="admin-btn-danger"
+                          onClick={() => handleMemberDelete(member.member_id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
