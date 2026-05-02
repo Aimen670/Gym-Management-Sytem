@@ -255,4 +255,22 @@ WHERE trainer_id = @trainer_id;
 -- Delete trainer profile
 DELETE FROM trainers WHERE trainer_id = @trainer_id;
 
+-- Membership Plan Management (admin create/update/deactivate)
+-- Fetch plans for admin list
+SELECT plan_id, plan_name, duration_months, price, description
+FROM membership_plans
+ORDER BY plan_id DESC;
+
+-- Add a new plan
+INSERT INTO membership_plans (plan_name, duration_months, price, description)
+VALUES (@plan_name, @duration_months, @price, @description);
+
+-- Update plan details
+UPDATE membership_plans
+SET plan_name = @plan_name,
+    duration_months = @duration_months,
+    price = @price,
+    description = @description
+WHERE plan_id = @plan_id;
+
 

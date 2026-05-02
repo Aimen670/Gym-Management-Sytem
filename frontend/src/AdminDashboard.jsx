@@ -311,6 +311,7 @@ function AdminDashboard() {
     }
   };
 
+
   const handlePlanDelete = async (planId) => {
     setError('');
     try {
@@ -820,37 +821,45 @@ function AdminDashboard() {
           <div className="admin-section-full">
             <div className="admin-section-header">
               <h2>Membership Plans</h2>
-              <p>Create or update membership plans.</p>
+              <p>Create, update, or delete membership plans.</p>
             </div>
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handlePlanSubmit}>
                 <h3>{editingPlanId ? 'Edit' : 'Add'} Plan</h3>
+                <label className="admin-form-label" htmlFor="plan-name">Plan Name</label>
                 <input
                   className="admin-form-input"
+                  id="plan-name"
                   name="plan_name"
                   value={planForm.plan_name}
                   onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })}
                   placeholder="Plan name"
                   required
                 />
+                <label className="admin-form-label" htmlFor="plan-duration">Duration (months)</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="plan-duration"
                   name="duration_months"
                   value={planForm.duration_months}
                   onChange={(e) => setPlanForm({ ...planForm, duration_months: e.target.value })}
                   placeholder="Duration (months)"
                 />
+                <label className="admin-form-label" htmlFor="plan-price">Price</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="plan-price"
                   name="price"
                   value={planForm.price}
                   onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
                   placeholder="Price"
                 />
+                <label className="admin-form-label" htmlFor="plan-description">Benefits / Description</label>
                 <textarea
                   className="admin-form-input"
+                  id="plan-description"
                   name="description"
                   value={planForm.description}
                   onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
