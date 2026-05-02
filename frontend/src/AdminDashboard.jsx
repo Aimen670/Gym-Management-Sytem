@@ -147,6 +147,24 @@ function AdminDashboard() {
     loadAll();
   }, []);
 
+  useEffect(() => {
+    if (activeTab !== 'trainers') {
+      return;
+    }
+
+    const refreshTrainers = async () => {
+      setError('');
+      try {
+        await loadTrainers();
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      }
+    };
+
+    refreshTrainers();
+  }, [activeTab]);
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     window.location.href = '/';
@@ -530,8 +548,10 @@ function AdminDashboard() {
               {showMemberForm && (
                 <form className="admin-form-panel" onSubmit={handleMemberSave}>
                   <h3>{editingMemberId ? 'Edit Member' : 'Add Member'}</h3>
+                  <label className="admin-form-label" htmlFor="member-full-name">Full Name</label>
                   <input
                     className="admin-form-input"
+                    id="member-full-name"
                     name="full_name"
                     value={memberForm.full_name}
                     onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })}
@@ -539,8 +559,10 @@ function AdminDashboard() {
                     autoComplete="off"
                     required
                   />
+                  <label className="admin-form-label" htmlFor="member-email">Email</label>
                   <input
                     className="admin-form-input"
+                    id="member-email"
                     name="email"
                     value={memberForm.email}
                     onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
@@ -550,9 +572,11 @@ function AdminDashboard() {
                   />
                   {!editingMemberId && (
                     <div className="admin-password-wrapper">
+                      <label className="admin-form-label" htmlFor="member-password">Password</label>
                       <input
                         className="admin-form-input"
                         type={showMemberPassword ? 'text' : 'password'}
+                        id="member-password"
                         name="password"
                         value={memberForm.password}
                         onChange={(e) => setMemberForm({ ...memberForm, password: e.target.value })}
@@ -570,41 +594,51 @@ function AdminDashboard() {
                       </button>
                     </div>
                   )}
+                  <label className="admin-form-label" htmlFor="member-phone">Phone</label>
                   <input
                     className="admin-form-input"
+                    id="member-phone"
                     name="phone"
                     value={memberForm.phone}
                     onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
                     placeholder="Phone"
                     autoComplete="off"
                   />
+                  <label className="admin-form-label" htmlFor="member-age">Age</label>
                   <input
                     className="admin-form-input"
                     type="number"
+                    id="member-age"
                     name="age"
                     value={memberForm.age}
                     onChange={(e) => setMemberForm({ ...memberForm, age: e.target.value })}
                     placeholder="Age"
                     autoComplete="off"
                   />
+                  <label className="admin-form-label" htmlFor="member-gender">Gender</label>
                   <input
                     className="admin-form-input"
+                    id="member-gender"
                     name="gender"
                     value={memberForm.gender}
                     onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
                     placeholder="Gender"
                     autoComplete="off"
                   />
+                  <label className="admin-form-label" htmlFor="member-fitness-goal">Fitness Goal</label>
                   <input
                     className="admin-form-input"
+                    id="member-fitness-goal"
                     name="fitness_goal"
                     value={memberForm.fitness_goal}
                     onChange={(e) => setMemberForm({ ...memberForm, fitness_goal: e.target.value })}
                     placeholder="Fitness goal"
                     autoComplete="off"
                   />
+                  <label className="admin-form-label" htmlFor="member-status">Status</label>
                   <select
                     className="admin-form-input"
+                    id="member-status"
                     name="status"
                     value={memberForm.status}
                     onChange={(e) => setMemberForm({ ...memberForm, status: e.target.value })}
@@ -674,42 +708,55 @@ function AdminDashboard() {
             <div className="admin-section-header">
               <h2>Trainer Management</h2>
               <p>Add, edit, or remove trainers.</p>
+              <button className="admin-btn-secondary" onClick={loadTrainers}>
+                Refresh
+              </button>
             </div>
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleTrainerSubmit}>
                 <h3>{editingTrainerId ? 'Edit' : 'Add'} Trainer</h3>
+                <label className="admin-form-label" htmlFor="trainer-name">Trainer Name</label>
                 <input
                   className="admin-form-input"
+                  id="trainer-name"
                   name="name"
                   value={trainerForm.name}
                   onChange={(e) => setTrainerForm({ ...trainerForm, name: e.target.value })}
                   placeholder="Trainer name"
                   required
                 />
+                <label className="admin-form-label" htmlFor="trainer-specialization">Specialization</label>
                 <input
                   className="admin-form-input"
+                  id="trainer-specialization"
                   name="specialization"
                   value={trainerForm.specialization}
                   onChange={(e) => setTrainerForm({ ...trainerForm, specialization: e.target.value })}
                   placeholder="Specialization"
                 />
+                <label className="admin-form-label" htmlFor="trainer-phone">Phone</label>
                 <input
                   className="admin-form-input"
+                  id="trainer-phone"
                   name="phone"
                   value={trainerForm.phone}
                   onChange={(e) => setTrainerForm({ ...trainerForm, phone: e.target.value })}
                   placeholder="Phone"
                 />
+                <label className="admin-form-label" htmlFor="trainer-email">Email</label>
                 <input
                   className="admin-form-input"
+                  id="trainer-email"
                   name="email"
                   value={trainerForm.email}
                   onChange={(e) => setTrainerForm({ ...trainerForm, email: e.target.value })}
                   placeholder="Email"
                 />
+                <label className="admin-form-label" htmlFor="trainer-experience">Experience (years)</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="trainer-experience"
                   name="experience_years"
                   value={trainerForm.experience_years}
                   onChange={(e) => setTrainerForm({ ...trainerForm, experience_years: e.target.value })}

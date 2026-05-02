@@ -23,8 +23,4 @@ router.get('/admin/payments', (req, res) => {
     res.json([]);
 });
 
-router.get('/trainers', (req, res) => {
-    res.json([]);
-});
-
 module.exports = router;

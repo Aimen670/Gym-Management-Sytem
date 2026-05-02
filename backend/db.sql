@@ -233,4 +233,26 @@ WHERE member_id = @member_id;
 -- Delete member account
 DELETE FROM members WHERE member_id = @member_id;
 
+-- Trainer Management (admin view/add/update/delete)
+-- Fetch trainers for admin list
+SELECT trainer_id, name, specialization, phone, email, experience_years
+FROM trainers
+ORDER BY trainer_id DESC;
+
+-- Add a new trainer
+INSERT INTO trainers (name, specialization, phone, email, experience_years)
+VALUES (@name, @specialization, @phone, @email, @experience_years);
+
+-- Update trainer profile
+UPDATE trainers
+SET name = @name,
+    specialization = @specialization,
+    phone = @phone,
+    email = @email,
+    experience_years = @experience_years
+WHERE trainer_id = @trainer_id;
+
+-- Delete trainer profile
+DELETE FROM trainers WHERE trainer_id = @trainer_id;
+
 
