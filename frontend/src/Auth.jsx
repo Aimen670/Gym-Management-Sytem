@@ -42,13 +42,23 @@ function Auth() {
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        setMessage('Server returned an invalid response.');
+        setLoading(false);
+        return;
+      }
 
       if (response.ok) {
         setMessage(data.message || 'Success!');
         if (isLogin) {
-          // Store token if needed
           localStorage.setItem('token', data.token);
+          if (data.user) {
+            localStorage.setItem('memberProfile', JSON.stringify(data.user));
+          }
           setTimeout(() => {
             window.location.href = '/dashboard'; // Redirect to dashboard
           }, 1500);

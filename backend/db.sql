@@ -70,6 +70,24 @@ CREATE TABLE trainer_sessions (
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
 );
 
+-- Optional: explicit trainer availability (used by some builds/endpoints).
+-- The current app can also calculate availability from gym hours + existing sessions,
+-- but defining this table prevents "Invalid object name 'trainer_availability'" errors.
+IF OBJECT_ID('dbo.trainer_availability', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.trainer_availability (
+        availability_id INT PRIMARY KEY IDENTITY(1,1),
+        trainer_id INT NOT NULL,
+        available_date DATE NOT NULL,
+        start_time TIME(0) NOT NULL,
+        end_time TIME(0) NOT NULL,
+        is_active BIT NOT NULL CONSTRAINT DF_trainer_availability_is_active DEFAULT (1),
+        FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_trainer_availability_trainer_date
+        ON dbo.trainer_availability (trainer_id, available_date);
+END
+
 CREATE TABLE workout_plans (
     workout_plan_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,

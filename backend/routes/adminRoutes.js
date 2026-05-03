@@ -26,8 +26,17 @@ const {
     unenrollMemberHandler
 } = require('../controllers/enrollmentController');
 const { getAdminOverview } = require('../controllers/adminOverviewController');
+const {
+    getMemberDashboardHandler,
+    getMembershipPlansBrowseHandler,
+    subscribeMemberHandler
+} = require('../controllers/memberPortalController');
 
 router.get('/admin/overview', getAdminOverview);
+
+router.get('/membership-plans', getMembershipPlansBrowseHandler);
+router.get('/member/:memberId/dashboard', getMemberDashboardHandler);
+router.post('/member/:memberId/subscribe', subscribeMemberHandler);
 
 router.get('/admin/members', getMembers);
 router.put('/admin/members/:id', updateMemberHandler);

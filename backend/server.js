@@ -4,10 +4,12 @@ const app = express();
 const cors = require("cors");
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const { connectToDatabase } = require('./db');
+const { ensureMinimumSchema } = require('./utils/ensureSchema');
 const dataRoutes = require('./routes/dataRoutes');// import dataRoutes to handle data-related API endpoints
 const authRoutes = require('./routes/authRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const trainingBookingRoutes = require('./routes/trainingBookingRoutes');
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,6 +21,7 @@ app.use('/api', dataRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', trainerRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', trainingBookingRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello from the backend!');
@@ -31,6 +34,7 @@ app.get('/try', (req, res) => {
 const startServer = async () => {
     try {
         await connectToDatabase();
+        await ensureMinimumSchema();
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
         });

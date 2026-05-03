@@ -85,8 +85,19 @@ async function deletePlan(planId) {
     return { success: true };
 }
 
+async function getPlansForBrowse() {
+    const pool = getPool();
+    const result = await pool.request().query(
+        `SELECT plan_id, plan_name, duration_months, price, description
+         FROM membership_plans
+         ORDER BY duration_months ASC, plan_id ASC`
+    );
+    return result.recordset;
+}
+
 module.exports = {
     getPlans,
+    getPlansForBrowse,
     createPlan,
     updatePlan,
     deletePlan

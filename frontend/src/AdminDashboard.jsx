@@ -989,11 +989,9 @@ function convertTo24Hour(time) {
                 <input
                   className="admin-form-input"
                   type="time"
-                  step="1"
                   name="schedule_time"
                   value={classForm.schedule_time}
                   onChange={(e) => setClassForm({ ...classForm, schedule_time: e.target.value })}
-                  required
                 />
                 <input
                   className="admin-form-input"
@@ -1013,15 +1011,8 @@ function convertTo24Hour(time) {
                   multiple
                   value={classForm.plan_ids}
                   onChange={(e) => {
-                    const selectedOptions = Array.from(
-                      e.target.selectedOptions,
-                      option => Number(option.value)
-                    );
-
-                    setClassForm({
-                      ...classForm,
-                      plan_ids: selectedOptions
-                    });
+                    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                    setClassForm({ ...classForm, plan_ids: selectedOptions });
                   }}
                   style={{ minHeight: '100px' }}
                 >
@@ -1072,7 +1063,7 @@ function convertTo24Hour(time) {
                                 ? String(gymClass.schedule_time).slice(0, 5)
                                 : '',
                               capacity: gymClass.capacity ?? '',
-                              plan_ids: gymClass.plan_ids || []
+                              plan_ids: gymClass.plan_ids ? gymClass.plan_ids.split(',').filter(id => id) : []
                             });
                           }}
                         >

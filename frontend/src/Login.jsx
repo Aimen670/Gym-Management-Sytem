@@ -16,13 +16,21 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        setError('Server returned an invalid response. Is the API running?');
+        setLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         setError(data.error || 'Login failed');
@@ -31,6 +39,9 @@ function Login() {
       }
 
       localStorage.setItem('token', data.token);
+      if (data.user) {
+        localStorage.setItem('memberProfile', JSON.stringify(data.user));
+      }
       navigate('/dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
