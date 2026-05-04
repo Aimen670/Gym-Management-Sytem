@@ -7,7 +7,7 @@ const {
     updatePlanHandler,
     deletePlanHandler
 } = require('../controllers/planController');
-const { getPaymentsHandler, createPaymentHandler } = require('../controllers/paymentController');
+const { getPaymentsHandler, createPaymentHandler, getPendingPaymentsHandler, getRevenueReportHandler, getAllSubscriptionsHandler } = require('../controllers/paymentController');
 const {
     getClassesHandler,
     createClassHandler,
@@ -20,9 +20,23 @@ const {
     updateEquipmentHandler,
     deleteEquipmentHandler
 } = require('../controllers/equipmentController');
+const {
+    getClassEnrollmentsHandler,
+    enrollMemberHandler,
+    unenrollMemberHandler
+} = require('../controllers/enrollmentController');
 const { getAdminOverview } = require('../controllers/adminOverviewController');
+const {
+    getMemberDashboardHandler,
+    getMembershipPlansBrowseHandler,
+    subscribeMemberHandler
+} = require('../controllers/memberPortalController');
 
 router.get('/admin/overview', getAdminOverview);
+
+router.get('/membership-plans', getMembershipPlansBrowseHandler);
+router.get('/member/:memberId/dashboard', getMemberDashboardHandler);
+router.post('/member/:memberId/subscribe', subscribeMemberHandler);
 
 router.get('/admin/members', getMembers);
 router.post('/admin/members', createMemberHandler);
@@ -36,11 +50,18 @@ router.delete('/admin/plans/:id', deletePlanHandler);
 
 router.get('/admin/payments', getPaymentsHandler);
 router.post('/admin/payments', createPaymentHandler);
+router.get('/admin/payments/pending', getPendingPaymentsHandler);
+router.get('/admin/payments/revenue-report', getRevenueReportHandler);
+router.get('/admin/payments/subscriptions', getAllSubscriptionsHandler);
 
 router.get('/admin/classes', getClassesHandler);
 router.post('/admin/classes', createClassHandler);
 router.put('/admin/classes/:id', updateClassHandler);
 router.delete('/admin/classes/:id', deleteClassHandler);
+
+router.get('/admin/classes/:classId/enrollments', getClassEnrollmentsHandler);
+router.post('/admin/classes/:classId/enroll', enrollMemberHandler);
+router.delete('/admin/enrollments/:enrollmentId', unenrollMemberHandler);
 
 router.get('/admin/equipment', getEquipmentHandler);
 router.post('/admin/equipment', createEquipmentHandler);

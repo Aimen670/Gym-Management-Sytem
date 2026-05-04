@@ -22,7 +22,8 @@ const emptyClass = {
   trainer_id: '',
   schedule_date: '',
   schedule_time: '',
-  capacity: ''
+  capacity: '',
+  plan_ids: [] 
 };
 
 const emptyEquipment = {
@@ -47,6 +48,8 @@ function AdminDashboard() {
   const [classes, setClasses] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [revenueReport, setRevenueReport] = useState(null);
 
   const [trainerForm, setTrainerForm] = useState(emptyTrainer);
   const [planForm, setPlanForm] = useState(emptyPlan);
@@ -125,6 +128,16 @@ function AdminDashboard() {
     setPayments(data);
   };
 
+  const loadPendingPayments = async () => {
+    const data = await fetchJson('http://localhost:5000/api/admin/payments/pending');
+    setPendingPayments(data);
+  };
+
+  const loadRevenueReport = async () => {
+    const data = await fetchJson('http://localhost:5000/api/admin/payments/revenue-report');
+    setRevenueReport(data);
+  };
+
   useEffect(() => {
     const loadAll = async () => {
       setError('');
@@ -136,7 +149,9 @@ function AdminDashboard() {
           loadPlans(),
           loadClasses(),
           loadEquipment(),
-          loadPayments()
+          loadPayments(),
+          loadPendingPayments(),
+          loadRevenueReport()
         ]);
       } catch (err) {
         console.error(err);
@@ -322,36 +337,85 @@ function AdminDashboard() {
       setError(err.message);
     }
   };
+// 🔥 Add this helper function
+function convertTo24Hour(time) {
+  if (!time) return null;
 
-  const handleClassSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const payload = { ...classForm, trainer_id: classForm.trainer_id || null };
-      const url = editingClassId
-        ? `http://localhost:5000/api/admin/classes/${editingClassId}`
-        : 'http://localhost:5000/api/admin/classes';
-      const method = editingClassId ? 'PUT' : 'POST';
-      const data = await fetchJson(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (editingClassId) {
-        setClasses((prev) => prev.map((c) => (c.class_id === data.class_id ? data : c)));
-      } else {
-        setClasses((prev) => [data, ...prev]);
-      }
-      setClassForm(emptyClass);
-      setEditingClassId(null);
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  // If already in HH:MM (from input type="time")
+  if (/^\d{2}:\d{2}$/.test(time)) {
+    return `${time}:00`;
+  }
+
+  // Handle AM/PM format
+  const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = parseInt(match[1]);
+  const minute = match[2];
+  const period = match[3].toUpperCase();
+
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+
+  return `${hour.toString().padStart(2, '0')}:${minute}:00`;
+}
+ const handleClassSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+
+  try {
+    const payload = {
+      class_name: classForm.class_name.trim(),
+
+      trainer_id: classForm.trainer_id
+        ? Number(classForm.trainer_id)
+        : null,
+
+      schedule_date: classForm.schedule_date || null,
+
+      // 🔥 FIX: convert time properly
+      schedule_time: convertTo24Hour(classForm.schedule_time),
+
+      capacity: classForm.capacity
+        ? Number(classForm.capacity)
+        : null,
+
+      plan_ids: (classForm.plan_ids || []).map(id => Number(id))
+    };
+
+    console.log("FINAL PAYLOAD:", payload); // optional debug
+
+    const url = editingClassId
+      ? `http://localhost:5000/api/admin/classes/${editingClassId}`
+      : 'http://localhost:5000/api/admin/classes';
+
+    const method = editingClassId ? 'PUT' : 'POST';
+
+    const data = await fetchJson(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (editingClassId) {
+      setClasses(prev =>
+        prev.map(c => (c.class_id === data.class_id ? data : c))
+      );
+    } else {
+      setClasses(prev => [data, ...prev]);
     }
-  };
+
+    setClassForm(emptyClass);
+    setEditingClassId(null);
+
+  } catch (err) {
+    console.error(err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleClassDelete = async (classId) => {
     setError('');
@@ -416,6 +480,12 @@ function AdminDashboard() {
       });
       setPayments((prev) => [data, ...prev]);
       setPaymentForm(emptyPayment);
+      // Reload related data
+      await Promise.all([
+        loadPendingPayments(),
+        loadRevenueReport(),
+        loadOverview()
+      ]);
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -920,12 +990,76 @@ function AdminDashboard() {
         {activeTab === 'payments' && (
           <div className="admin-section-full">
             <div className="admin-section-header">
-              <h2>Payment & Billing</h2>
-              <p>Track payments and add new transactions.</p>
+              <h2>Payment & Billing Management</h2>
+              <p>Record payments, track transaction history, and monitor revenue.</p>
             </div>
+
+            {/* Revenue Report Section */}
+            {revenueReport && (
+              <div className="admin-section">
+                <h3>Revenue Report</h3>
+                <div className="admin-stats-grid">
+                  <div className="admin-stat-card">
+                    <span>Total Revenue</span>
+                    <strong>PKR {revenueReport.totals?.total_revenue || 0}</strong>
+                  </div>
+                  <div className="admin-stat-card">
+                    <span>Total Transactions</span>
+                    <strong>{revenueReport.totals?.total_transactions || 0}</strong>
+                  </div>
+                  <div className="admin-stat-card">
+                    <span>Average Transaction</span>
+                    <strong>PKR {revenueReport.totals?.avg_transaction ? Math.round(revenueReport.totals.avg_transaction) : 0}</strong>
+                  </div>
+                </div>
+                {revenueReport.byMethod && revenueReport.byMethod.length > 0 && (
+                  <div className="admin-section">
+                    <h4>Revenue by Payment Method</h4>
+                    <div className="admin-stats-grid">
+                      {revenueReport.byMethod.map((method) => (
+                        <div key={method.payment_method} className="admin-stat-card">
+                          <span>{method.payment_method.charAt(0).toUpperCase() + method.payment_method.slice(1)}</span>
+                          <strong>PKR {method.total_amount} ({method.transaction_count} txns)</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pending Payments Section */}
+            <div className="admin-section">
+              <h3>Pending & Overdue Payments</h3>
+              {pendingPayments.length === 0 ? (
+                <p className="admin-empty">No pending payments.</p>
+              ) : (
+                <div className="admin-list-panel">
+                  {pendingPayments.map((payment) => (
+                    <div key={payment.subscription_id} className="admin-card">
+                      <div>
+                        <h4>{payment.member_name}</h4>
+                        <p className="admin-card-email">{payment.email}</p>
+                        <div className="admin-card-meta">
+                          <span className={`status-badge status-${payment.status === 'overdue' ? 'danger' : payment.status === 'due_soon' ? 'warning' : 'info'}`}>
+                            {payment.status === 'overdue' ? 'Overdue' : payment.status === 'due_soon' ? 'Due Soon' : 'Active'}
+                          </span>
+                          <span>{payment.plan_name} - PKR {payment.price}</span>
+                          {payment.days_remaining !== null && payment.days_remaining >= 0 && (
+                            <span>{payment.days_remaining} days remaining</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="admin-grid-layout">
+              {/* Record Payment Form */}
               <form className="admin-form-panel" onSubmit={handlePaymentSubmit}>
-                <h3>Record Payment</h3>
+                <h3>Record New Payment</h3>
                 <input
                   className="admin-form-input"
                   name="subscription_id"
@@ -940,7 +1074,7 @@ function AdminDashboard() {
                   name="amount"
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                  placeholder="Amount"
+                  placeholder="Amount (PKR)"
                   required
                 />
                 <select
@@ -950,30 +1084,31 @@ function AdminDashboard() {
                   onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
                   required
                 >
-                  <option value="">Payment method</option>
+                  <option value="">Select Payment Method</option>
                   <option value="cash">Cash</option>
                   <option value="card">Card</option>
                   <option value="online">Online</option>
                 </select>
                 <button className="admin-btn-primary" type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : 'Record Payment'}
+                  {loading ? 'Recording...' : 'Record Payment'}
                 </button>
               </form>
 
+              {/* Transaction History */}
               <div className="admin-list-panel">
-                <h3>Payments</h3>
+                <h3>Transaction History</h3>
                 {payments.length === 0 ? (
-                  <p className="admin-empty">No payments recorded.</p>
+                  <p className="admin-empty">No payments recorded yet.</p>
                 ) : (
                   payments.map((payment) => (
                     <div key={payment.payment_id} className="admin-card">
                       <div>
-                        <h4>Payment #{payment.payment_id}</h4>
-                        <p className="admin-card-email">Subscription: {payment.subscription_id}</p>
+                        <h4>{payment.member_name}</h4>
+                        <p className="admin-card-email">{payment.plan_name} - Subscription #{payment.subscription_id}</p>
                         <div className="admin-card-meta">
                           <span className="status-badge status-completed">{payment.payment_method}</span>
                           <span><strong>PKR {payment.amount}</strong></span>
-                          {payment.payment_date && <span>{String(payment.payment_date).split('T')[0]}</span>}
+                          <span>{payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -1039,6 +1174,27 @@ function AdminDashboard() {
                   onChange={(e) => setClassForm({ ...classForm, capacity: e.target.value })}
                   placeholder="Capacity"
                 />
+                <label htmlFor="plan_ids" style={{ fontSize: '14px', fontWeight: '500', marginTop: '10px', display: 'block' }}>
+                  Link Membership Plans (Hold Ctrl/Cmd to select multiple):
+                </label>
+                <select
+                  id="plan_ids"
+                  className="admin-form-input"
+                  name="plan_ids"
+                  multiple
+                  value={classForm.plan_ids}
+                  onChange={(e) => {
+                    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                    setClassForm({ ...classForm, plan_ids: selectedOptions });
+                  }}
+                  style={{ minHeight: '100px' }}
+                >
+                  {plans.map((plan) => (
+                    <option key={plan.plan_id} value={plan.plan_id}>
+                      {plan.plan_name} ({plan.duration_months} months) - PKR {plan.price}
+                    </option>
+                  ))}
+                </select>
                 <button className="admin-btn-primary" type="submit" disabled={loading}>
                   {loading ? 'Saving...' : editingClassId ? 'Update Class' : 'Add Class'}
                 </button>
@@ -1059,6 +1215,11 @@ function AdminDashboard() {
                           {gymClass.schedule_time && <span>{String(gymClass.schedule_time).slice(0, 5)}</span>}
                           {gymClass.capacity && <span className="status-badge">{gymClass.capacity} seats</span>}
                         </div>
+                        {gymClass.associated_plans && (
+                          <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
+                            <strong>Plans:</strong> {gymClass.associated_plans}
+                          </p>
+                        )}
                       </div>
                       <div className="admin-card-actions">
                         <button
@@ -1074,7 +1235,8 @@ function AdminDashboard() {
                               schedule_time: gymClass.schedule_time
                                 ? String(gymClass.schedule_time).slice(0, 5)
                                 : '',
-                              capacity: gymClass.capacity ?? ''
+                              capacity: gymClass.capacity ?? '',
+                              plan_ids: gymClass.plan_ids ? gymClass.plan_ids.split(',').filter(id => id) : []
                             });
                           }}
                         >

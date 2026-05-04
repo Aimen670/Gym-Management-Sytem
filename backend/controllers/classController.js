@@ -1,5 +1,6 @@
 const { getClasses, createClass, updateClass, deleteClass } = require('../models/classModel');
 
+// Retrieves all classes with their associated plans
 async function getClassesHandler(req, res) {
     try {
         const classes = await getClasses();
@@ -10,6 +11,8 @@ async function getClassesHandler(req, res) {
     }
 }
 
+// Creates a new class and links it with selected membership plans
+// Request body should include: class_name, trainer_id, schedule_date, schedule_time, capacity, plan_ids (array)
 async function createClassHandler(req, res) {
     try {
         const created = await createClass(req.body);
@@ -20,6 +23,8 @@ async function createClassHandler(req, res) {
     }
 }
 
+// Updates a class and its associated plans
+// Request body can include: class_name, trainer_id, schedule_date, schedule_time, capacity, plan_ids (array)
 async function updateClassHandler(req, res) {
     try {
         const classId = parseInt(req.params.id, 10);
@@ -36,6 +41,7 @@ async function updateClassHandler(req, res) {
     }
 }
 
+// Deletes a class and its associated enrollments and plan links (cascade)
 async function deleteClassHandler(req, res) {
     try {
         const classId = parseInt(req.params.id, 10);

@@ -70,6 +70,24 @@ CREATE TABLE trainer_sessions (
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
 );
 
+-- Optional: explicit trainer availability (used by some builds/endpoints).
+-- The current app can also calculate availability from gym hours + existing sessions,
+-- but defining this table prevents "Invalid object name 'trainer_availability'" errors.
+IF OBJECT_ID('dbo.trainer_availability', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.trainer_availability (
+        availability_id INT PRIMARY KEY IDENTITY(1,1),
+        trainer_id INT NOT NULL,
+        available_date DATE NOT NULL,
+        start_time TIME(0) NOT NULL,
+        end_time TIME(0) NOT NULL,
+        is_active BIT NOT NULL CONSTRAINT DF_trainer_availability_is_active DEFAULT (1),
+        FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_trainer_availability_trainer_date
+        ON dbo.trainer_availability (trainer_id, available_date);
+END
+
 CREATE TABLE workout_plans (
     workout_plan_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,
@@ -136,6 +154,8 @@ CREATE TABLE fitness_goals (
     FOREIGN KEY (member_id) REFERENCES members(member_id) ON DELETE CASCADE
 );
 
+-- Classes represent group fitness sessions created by admins.
+-- Admins can assign a trainer, define a schedule, and set a maximum participant capacity.
 CREATE TABLE classes (
     class_id INT PRIMARY KEY IDENTITY(1,1),
     class_name VARCHAR(100),
@@ -144,6 +164,18 @@ CREATE TABLE classes (
     schedule_time TIME,
     capacity INT CHECK (capacity > 0),
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
+);
+
+-- Junction table linking classes to membership plans
+-- This allows each class to be associated with multiple plans
+-- Admins can specify which membership plans include access to a specific class
+CREATE TABLE class_plans (
+    class_plan_id INT PRIMARY KEY IDENTITY(1,1),
+    class_id INT NOT NULL,
+    plan_id INT NOT NULL,
+    UNIQUE (class_id, plan_id),
+    FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (plan_id) REFERENCES membership_plans(plan_id) ON DELETE CASCADE
 );
 
 CREATE TABLE class_enrollments (

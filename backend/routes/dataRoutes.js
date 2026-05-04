@@ -1,22 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { getDataHandler } = require('../controllers/dataController');
 
-// TEMP TEST ROUTES (add these first)
-
-router.get('/admin/overview', (req, res) => {
-    res.json({ message: 'Overview working' });
-});
-
-router.get('/admin/classes', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/equipment', (req, res) => {
-    res.json([]);
-});
-
-router.get('/admin/payments', (req, res) => {
-    res.json([]);
-});
+// GET all data from members  (used to test if database connected )
+router.get('/data', getDataHandler);
 
 module.exports = router;
