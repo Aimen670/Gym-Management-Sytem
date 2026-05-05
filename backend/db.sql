@@ -241,68 +241,21 @@ INSERT INTO equipment (equipment_name, quantity, purchase_date, status) VALUES
 ('Weight Plates', 30, '2024-02-15', 'in_use'),
 ('Elliptical Machine', 3, '2024-03-10', 'maintenance');
 
--- Member Management (admin view/add/update/suspend)
--- Fetch members for admin list
-SELECT member_id, full_name, email, phone, age, gender, fitness_goal, status, join_date
-FROM members
-ORDER BY member_id DESC;
+-- Workout Plans Data
+INSERT INTO workout_plans (member_id, trainer_id, created_date) VALUES
+(1, 1, '2025-03-05'),
+(2, 2, '2025-03-12'),
+(3, 3, '2025-03-18');
 
--- Add a new member (admin entry)
-INSERT INTO members (full_name, email, phone, age, gender, password, fitness_goal, status)
-VALUES (@full_name, @email, @phone, @age, @gender, @password, @fitness_goal, @status);
-
--- Update member profile or suspend (set status = 'inactive')
-UPDATE members
-SET full_name = COALESCE(@full_name, full_name),
-    email = COALESCE(@email, email),
-    phone = COALESCE(@phone, phone),
-    age = COALESCE(@age, age),
-    gender = COALESCE(@gender, gender),
-    fitness_goal = COALESCE(@fitness_goal, fitness_goal),
-    status = COALESCE(@status, status)
-WHERE member_id = @member_id;
-
--- Delete member account
-DELETE FROM members WHERE member_id = @member_id;
-
--- Trainer Management (admin view/add/update/delete)
--- Fetch trainers for admin list
-SELECT trainer_id, name, specialization, phone, email, experience_years
-FROM trainers
-ORDER BY trainer_id DESC;
-
--- Add a new trainer
-INSERT INTO trainers (name, specialization, phone, email, experience_years)
-VALUES (@name, @specialization, @phone, @email, @experience_years);
-
--- Update trainer profile
-UPDATE trainers
-SET name = @name,
-    specialization = @specialization,
-    phone = @phone,
-    email = @email,
-    experience_years = @experience_years
-WHERE trainer_id = @trainer_id;
-
--- Delete trainer profile
-DELETE FROM trainers WHERE trainer_id = @trainer_id;
-
--- Membership Plan Management (admin create/update/deactivate)
--- Fetch plans for admin list
-SELECT plan_id, plan_name, duration_months, price, description
-FROM membership_plans
-ORDER BY plan_id DESC;
-
--- Add a new plan
-INSERT INTO membership_plans (plan_name, duration_months, price, description)
-VALUES (@plan_name, @duration_months, @price, @description);
-
--- Update plan details
-UPDATE membership_plans
-SET plan_name = @plan_name,
-    duration_months = @duration_months,
-    price = @price,
-    description = @description
-WHERE plan_id = @plan_id;
+INSERT INTO workout_exercises (workout_plan_id, exercise_name, sets, reps, schedule_day) VALUES
+(1, 'Bench Press', 4, 8, 'monday'),
+(1, 'Incline Dumbbell Press', 3, 10, 'monday'),
+(1, 'Lat Pulldown', 4, 10, 'wednesday'),
+(1, 'Seated Row', 3, 12, 'wednesday'),
+(2, 'Squats', 4, 8, 'tuesday'),
+(2, 'Leg Press', 3, 12, 'tuesday'),
+(2, 'Hamstring Curl', 3, 12, 'thursday'),
+(3, 'Deadlift', 4, 6, 'friday'),
+(3, 'Overhead Press', 3, 8, 'friday');
 
 

@@ -39,6 +39,12 @@ const emptyPayment = {
   payment_method: ''
 };
 
+const emptyWorkoutPlan = {
+  member_id: '',
+  trainer_id: '',
+  exercise_ids: []
+};
+
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [overview, setOverview] = useState(null);
@@ -50,12 +56,15 @@ function AdminDashboard() {
   const [payments, setPayments] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [revenueReport, setRevenueReport] = useState(null);
+  const [workoutPlans, setWorkoutPlans] = useState([]);
+  const [workoutExercises, setWorkoutExercises] = useState([]);
 
   const [trainerForm, setTrainerForm] = useState(emptyTrainer);
   const [planForm, setPlanForm] = useState(emptyPlan);
   const [classForm, setClassForm] = useState(emptyClass);
   const [equipmentForm, setEquipmentForm] = useState(emptyEquipment);
   const [paymentForm, setPaymentForm] = useState(emptyPayment);
+  const [workoutPlanForm, setWorkoutPlanForm] = useState(emptyWorkoutPlan);
 
   const [editingTrainerId, setEditingTrainerId] = useState(null);
   const [editingPlanId, setEditingPlanId] = useState(null);
@@ -138,6 +147,16 @@ function AdminDashboard() {
     setRevenueReport(data);
   };
 
+  const loadWorkoutPlans = async () => {
+    const data = await fetchJson('http://localhost:5000/api/admin/workout-plans');
+    setWorkoutPlans(data);
+  };
+
+  const loadWorkoutExercises = async () => {
+    const data = await fetchJson('http://localhost:5000/api/admin/workout-exercises');
+    setWorkoutExercises(data);
+  };
+
   useEffect(() => {
     const loadAll = async () => {
       setError('');
@@ -151,7 +170,9 @@ function AdminDashboard() {
           loadEquipment(),
           loadPayments(),
           loadPendingPayments(),
-          loadRevenueReport()
+          loadRevenueReport(),
+          loadWorkoutPlans(),
+          loadWorkoutExercises()
         ]);
       } catch (err) {
         console.error(err);
@@ -341,21 +362,33 @@ function AdminDashboard() {
 function convertTo24Hour(time) {
   if (!time) return null;
 
+  if (typeof time !== 'string') {
+    return null;
+  }
+
+  const trimmed = time.trim();
+
   // If already in HH:MM (from input type="time")
-  if (/^\d{2}:\d{2}$/.test(time)) {
-    return `${time}:00`;
+  if (/^\d{2}:\d{2}$/.test(trimmed)) {
+    return `${trimmed}:00`;
+  }
+
+  // Accept HH:MM:SS or HH:MM:SS.sss
+  const hhmmssMatch = /^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?$/.exec(trimmed);
+  if (hhmmssMatch) {
+    return `${hhmmssMatch[1]}:${hhmmssMatch[2]}:${hhmmssMatch[3]}`;
   }
 
   // Handle AM/PM format
-  const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(trimmed);
   if (!match) return null;
 
-  let hour = parseInt(match[1]);
+  let hour = parseInt(match[1], 10);
   const minute = match[2];
   const period = match[3].toUpperCase();
 
-  if (period === "PM" && hour !== 12) hour += 12;
-  if (period === "AM" && hour === 12) hour = 0;
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
 
   return `${hour.toString().padStart(2, '0')}:${minute}:00`;
 }
@@ -365,6 +398,13 @@ function convertTo24Hour(time) {
   setError('');
 
   try {
+    const normalizedTime = convertTo24Hour(classForm.schedule_time);
+    if (!normalizedTime) {
+      setError('Schedule time is required and must be in HH:MM or HH:MM:SS format');
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       class_name: classForm.class_name.trim(),
 
@@ -375,7 +415,7 @@ function convertTo24Hour(time) {
       schedule_date: classForm.schedule_date || null,
 
       // 🔥 FIX: convert time properly
-      schedule_time: convertTo24Hour(classForm.schedule_time),
+      schedule_time: normalizedTime,
 
       capacity: classForm.capacity
         ? Number(classForm.capacity)
@@ -494,6 +534,33 @@ function convertTo24Hour(time) {
     }
   };
 
+  const handleWorkoutPlanSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const payload = {
+        member_id: workoutPlanForm.member_id,
+        trainer_id: workoutPlanForm.trainer_id || null,
+        exercise_ids: workoutPlanForm.exercise_ids
+      };
+
+      await fetchJson('http://localhost:5000/api/admin/workout-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      await loadWorkoutPlans();
+      setWorkoutPlanForm(emptyWorkoutPlan);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard-wrapper">
       {/* Header */}
@@ -551,6 +618,18 @@ function convertTo24Hour(time) {
             onClick={() => setActiveTab('equipment')}
           >
             Equipment
+          </button>
+          <button 
+            className={`admin-tab ${activeTab === 'workout-plans' ? 'active' : ''}`}
+            onClick={() => setActiveTab('workout-plans')}
+          >
+            Workout Plans
+          </button>
+          <button 
+            className={`admin-tab ${activeTab === 'workout-exercises' ? 'active' : ''}`}
+            onClick={() => setActiveTab('workout-exercises')}
+          >
+            Exercises
           </button>
         </div>
       </div>
@@ -1351,6 +1430,157 @@ function convertTo24Hour(time) {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'workout-plans' && (
+          <div className="admin-section-full">
+            <div className="admin-section-header">
+              <h2>Workout Plan Management</h2>
+              <p>Create workout plans and assign them to members.</p>
+            </div>
+            <div className="admin-grid-layout">
+              <form className="admin-form-panel" onSubmit={handleWorkoutPlanSubmit}>
+                <h3>Add Workout Plan</h3>
+                <label className="admin-form-label" htmlFor="workout-member">Member</label>
+                <select
+                  className="admin-form-input"
+                  id="workout-member"
+                  name="member_id"
+                  value={workoutPlanForm.member_id}
+                  onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, member_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select member</option>
+                  {members.map((member) => (
+                    <option key={member.member_id} value={member.member_id}>
+                      {member.full_name} (#{member.member_id})
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="workout-trainer">Trainer</label>
+                <select
+                  className="admin-form-input"
+                  id="workout-trainer"
+                  name="trainer_id"
+                  value={workoutPlanForm.trainer_id}
+                  onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, trainer_id: e.target.value })}
+                >
+                  <option value="">Unassigned</option>
+                  {trainers.map((trainer) => (
+                    <option key={trainer.trainer_id} value={trainer.trainer_id}>
+                      {trainer.name}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="admin-workout-exercise-header">
+                  <span>Exercises</span>
+                  <span className="admin-workout-exercise-hint">Select one or more exercises</span>
+                </div>
+
+                <div className="admin-workout-exercise-select">
+                  {workoutExercises.length === 0 ? (
+                    <p className="admin-empty">No exercises available.</p>
+                  ) : (
+                    workoutExercises.map((exercise) => (
+                      <label key={exercise.exercise_id} className="admin-workout-exercise-option">
+                        <input
+                          type="checkbox"
+                          value={exercise.exercise_id}
+                          checked={workoutPlanForm.exercise_ids.includes(String(exercise.exercise_id))}
+                          onChange={(e) => {
+                            const { checked, value } = e.target;
+                            setWorkoutPlanForm((prev) => {
+                              const nextIds = checked
+                                ? [...prev.exercise_ids, value]
+                                : prev.exercise_ids.filter((id) => id !== value);
+                              return { ...prev, exercise_ids: nextIds };
+                            });
+                          }}
+                        />
+                        <span className="admin-workout-exercise-name">{exercise.exercise_name}</span>
+                        <span>{exercise.sets} sets</span>
+                        <span>{exercise.reps} reps</span>
+                        <span>{exercise.schedule_day || 'Any day'}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+
+                <button className="admin-btn-primary" type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : 'Add Workout Plan'}
+                </button>
+              </form>
+
+              <div className="admin-list-panel">
+                <h3>Workout Plans</h3>
+                {workoutPlans.length === 0 ? (
+                  <p className="admin-empty">No workout plans yet.</p>
+                ) : (
+                  workoutPlans.map((plan) => (
+                    <div key={plan.workout_plan_id} className="admin-card admin-card-stack">
+                      <div>
+                        <h4>Plan #{plan.workout_plan_id}</h4>
+                        <p className="admin-card-email">
+                          Member: {plan.member_name || plan.member_id} · Trainer: {plan.trainer_name || 'Unassigned'}
+                        </p>
+                        <div className="admin-card-meta">
+                          {plan.created_date && (
+                            <span>{String(plan.created_date).split('T')[0]}</span>
+                          )}
+                          <span>{plan.exercises ? plan.exercises.length : 0} exercises</span>
+                        </div>
+                        {plan.exercises && plan.exercises.length > 0 && (
+                          <div className="admin-workout-exercise-list">
+                            {plan.exercises.map((exercise) => (
+                              <div key={exercise.exercise_id} className="admin-workout-exercise-item">
+                                <span>{exercise.exercise_name}</span>
+                                <span>{exercise.sets} sets</span>
+                                <span>{exercise.reps} reps</span>
+                                <span>{exercise.schedule_day || 'Any day'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'workout-exercises' && (
+          <div className="admin-section-full">
+            <div className="admin-section-header">
+              <h2>Workout Exercises</h2>
+              <p>Browse all exercises with sets, reps, and schedules.</p>
+            </div>
+            <div className="admin-list-panel">
+              <h3>Exercises</h3>
+              {workoutExercises.length === 0 ? (
+                <p className="admin-empty">No exercises yet.</p>
+              ) : (
+                workoutExercises.map((exercise) => (
+                  <div key={exercise.exercise_id} className="admin-card admin-card-stack">
+                    <div>
+                      <h4>{exercise.exercise_name}</h4>
+                      <p className="admin-card-email">
+                        Plan #{exercise.workout_plan_id} · Member: {exercise.member_name || exercise.member_id}
+                      </p>
+                      <div className="admin-card-meta">
+                        <span>{exercise.sets} sets</span>
+                        <span>{exercise.reps} reps</span>
+                        <span>{exercise.schedule_day || 'Any day'}</span>
+                        <span>{exercise.trainer_name || 'Unassigned'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

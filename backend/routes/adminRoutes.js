@@ -15,6 +15,11 @@ const {
     deleteClassHandler
 } = require('../controllers/classController');
 const {
+    getWorkoutPlansAdminHandler,
+    createWorkoutPlanHandler,
+    getWorkoutExercisesAdminHandler
+} = require('../controllers/workoutPlanController');
+const {
     getEquipmentHandler,
     createEquipmentHandler,
     updateEquipmentHandler,
@@ -67,5 +72,9 @@ router.get('/admin/equipment', getEquipmentHandler);
 router.post('/admin/equipment', createEquipmentHandler);
 router.put('/admin/equipment/:id', updateEquipmentHandler);
 router.delete('/admin/equipment/:id', deleteEquipmentHandler);
+
+router.get('/admin/workout-plans', getWorkoutPlansAdminHandler);
+router.post('/admin/workout-plans', createWorkoutPlanHandler);
+router.get('/admin/workout-exercises', getWorkoutExercisesAdminHandler);
 
 module.exports = router;

@@ -1,5 +1,62 @@
 const { sql, getPool } = require('../db');
 
+async function getWorkoutPlansForMember(memberId) {
+    const pool = getPool();
+    const plansResult = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query(`
+            SELECT
+                wp.workout_plan_id,
+                wp.member_id,
+                wp.trainer_id,
+                wp.created_date,
+                t.name AS trainer_name
+            FROM workout_plans wp
+            LEFT JOIN trainers t ON wp.trainer_id = t.trainer_id
+            WHERE wp.member_id = @member_id
+            ORDER BY wp.created_date DESC, wp.workout_plan_id DESC
+        `);
+
+    if (plansResult.recordset.length === 0) {
+        return [];
+    }
+
+    const plans = plansResult.recordset.map((row) => ({
+        ...row,
+        exercises: []
+    }));
+
+    const planMap = new Map(plans.map((plan) => [plan.workout_plan_id, plan]));
+    const request = pool.request();
+    const idParams = plans.map((plan, idx) => {
+        const key = `plan_id_${idx}`;
+        request.input(key, sql.Int, plan.workout_plan_id);
+        return `@${key}`;
+    });
+
+    const exercisesResult = await request.query(`
+        SELECT
+            exercise_id,
+            workout_plan_id,
+            exercise_name,
+            sets,
+            reps,
+            schedule_day
+        FROM workout_exercises
+        WHERE workout_plan_id IN (${idParams.join(', ')})
+        ORDER BY workout_plan_id, schedule_day, exercise_name
+    `);
+
+    exercisesResult.recordset.forEach((row) => {
+        const plan = planMap.get(row.workout_plan_id);
+        if (plan) {
+            plan.exercises.push(row);
+        }
+    });
+
+    return plans;
+}
+
 async function getMemberDashboard(memberId) {
     const pool = getPool();
 
@@ -82,11 +139,14 @@ async function getMemberDashboard(memberId) {
               AND session_date >= DATEADD(day, -30, CAST(GETDATE() AS DATE))
         `);
 
+    const workoutPlans = await getWorkoutPlansForMember(memberId);
+
     return {
         profile,
         subscription: subscriptionResult.recordset[0] || null,
         upcomingClasses: classesResult.recordset,
         upcomingSessions: sessionsResult.recordset,
+        workoutPlans,
         stats: {
             completed_sessions_last_30: completedResult.recordset[0]?.completed_last_30 ?? 0
         }

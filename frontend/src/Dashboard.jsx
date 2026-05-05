@@ -57,6 +57,21 @@ function formatTime(value) {
   return String(value);
 }
 
+function formatScheduleDay(value) {
+  if (!value) return '—';
+  const day = String(value).toLowerCase();
+  const map = {
+    monday: 'Mon',
+    tuesday: 'Tue',
+    wednesday: 'Wed',
+    thursday: 'Thu',
+    friday: 'Fri',
+    saturday: 'Sat',
+    sunday: 'Sun'
+  };
+  return map[day] || day.charAt(0).toUpperCase() + day.slice(1);
+}
+
 function normalizeSlotTimeToHHMM(value) {
   if (value == null) return '';
   if (typeof value === 'string') {
@@ -298,6 +313,7 @@ function Dashboard() {
   const subscription = dashboard?.subscription;
   const upcomingClasses = dashboard?.upcomingClasses ?? [];
   const upcomingSessions = dashboard?.upcomingSessions ?? [];
+  const workoutPlans = dashboard?.workoutPlans ?? [];
   const completed30 = dashboard?.stats?.completed_sessions_last_30 ?? 0;
 
   const greeting = useMemo(() => {
@@ -363,6 +379,7 @@ function Dashboard() {
             { id: 'overview', label: 'Overview' },
             { id: 'membership', label: 'Membership' },
             { id: 'schedule', label: 'Schedule' },
+            { id: 'workouts', label: 'Workout plans' },
             { id: 'trainers', label: 'Trainers' }
           ].map((item) => (
             <button
@@ -642,6 +659,57 @@ function Dashboard() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </section>
+          )}
+
+          {activeNav === 'workouts' && (
+            <section className="member-card member-card-pad member-card-wide">
+              <h2>Workout plans</h2>
+              <p className="member-muted">View the routines your trainer assigned, with sets, reps, and schedules.</p>
+              {workoutPlans.length === 0 ? (
+                <p className="member-muted" style={{ marginTop: 12 }}>
+                  No workout plans assigned yet. Ask your trainer to create one.
+                </p>
+              ) : (
+                <div className="member-workout-grid">
+                  {workoutPlans.map((plan) => (
+                    <article key={plan.workout_plan_id} className="member-workout-card">
+                      <div className="member-workout-head">
+                        <div>
+                          <h3>Plan #{plan.workout_plan_id}</h3>
+                          <p className="member-muted">
+                            Trainer: {plan.trainer_name || 'Unassigned'}
+                          </p>
+                        </div>
+                        <span className="member-workout-date">Created {formatDate(plan.created_date)}</span>
+                      </div>
+
+                      {plan.exercises && plan.exercises.length > 0 ? (
+                        <div className="member-workout-table">
+                          <div className="member-workout-row member-workout-row-head">
+                            <span>Exercise</span>
+                            <span>Sets</span>
+                            <span>Reps</span>
+                            <span>Schedule</span>
+                          </div>
+                          {plan.exercises.map((exercise) => (
+                            <div key={exercise.exercise_id} className="member-workout-row">
+                              <span>{exercise.exercise_name || '—'}</span>
+                              <span>{exercise.sets ?? '—'}</span>
+                              <span>{exercise.reps ?? '—'}</span>
+                              <span className="member-workout-day">{formatScheduleDay(exercise.schedule_day)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="member-muted" style={{ marginTop: 10 }}>
+                          No exercises listed for this plan.
+                        </p>
+                      )}
+                    </article>
+                  ))}
+                </div>
               )}
             </section>
           )}
