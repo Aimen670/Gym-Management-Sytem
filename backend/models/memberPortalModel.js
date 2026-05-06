@@ -141,12 +141,28 @@ async function getMemberDashboard(memberId) {
 
     const workoutPlans = await getWorkoutPlansForMember(memberId);
 
+    const dietPlansResult = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query(`
+            SELECT
+                dp.diet_plan_id,
+                dp.trainer_id,
+                t.name AS trainer_name,
+                dp.calorie_target,
+                dp.meal_schedule
+            FROM diet_plans dp
+            LEFT JOIN trainers t ON dp.trainer_id = t.trainer_id
+            WHERE dp.member_id = @member_id
+            ORDER BY dp.diet_plan_id DESC
+        `);
+
     return {
         profile,
         subscription: subscriptionResult.recordset[0] || null,
         upcomingClasses: classesResult.recordset,
         upcomingSessions: sessionsResult.recordset,
         workoutPlans,
+        dietPlans: dietPlansResult.recordset,
         stats: {
             completed_sessions_last_30: completedResult.recordset[0]?.completed_last_30 ?? 0
         }

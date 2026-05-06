@@ -33,6 +33,12 @@ const {
     enrollMemberHandler,
     unenrollMemberHandler
 } = require('../controllers/enrollmentController');
+const {
+    getDietPlansAdminHandler,
+    createDietPlanHandler,
+    updateDietPlanHandler,
+    deleteDietPlanHandler
+} = require('../controllers/dietPlanController');
 const { getAdminOverview } = require('../controllers/adminOverviewController');
 const {
     getMemberDashboardHandler,
@@ -82,5 +88,10 @@ router.get('/admin/workout-exercises', getWorkoutExercisesAdminHandler);
 router.post('/admin/workout-exercises', createWorkoutExerciseHandler);
 router.put('/admin/workout-exercises/:id', updateWorkoutExerciseHandler);
 router.delete('/admin/workout-exercises/:id', deleteWorkoutExerciseHandler);
+
+router.get('/admin/diet-plans', getDietPlansAdminHandler);
+router.post('/admin/diet-plans', createDietPlanHandler);
+router.put('/admin/diet-plans/:id', updateDietPlanHandler);
+router.delete('/admin/diet-plans/:id', deleteDietPlanHandler);
 
 module.exports = router;

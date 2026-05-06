@@ -53,6 +53,13 @@ const emptyWorkoutExercise = {
   schedule_day: ''
 };
 
+const emptyDietPlan = {
+  member_id: '',
+  trainer_id: '',
+  calorie_target: '',
+  meal_schedule: ''
+};
+
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [overview, setOverview] = useState(null);
@@ -66,6 +73,7 @@ function AdminDashboard() {
   const [revenueReport, setRevenueReport] = useState(null);
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [workoutExercises, setWorkoutExercises] = useState([]);
+  const [dietPlans, setDietPlans] = useState([]);
 
   const [trainerForm, setTrainerForm] = useState(emptyTrainer);
   const [planForm, setPlanForm] = useState(emptyPlan);
@@ -74,6 +82,7 @@ function AdminDashboard() {
   const [paymentForm, setPaymentForm] = useState(emptyPayment);
   const [workoutPlanForm, setWorkoutPlanForm] = useState(emptyWorkoutPlan);
   const [workoutExerciseForm, setWorkoutExerciseForm] = useState(emptyWorkoutExercise);
+  const [dietPlanForm, setDietPlanForm] = useState(emptyDietPlan);
 
   const [editingTrainerId, setEditingTrainerId] = useState(null);
   const [editingPlanId, setEditingPlanId] = useState(null);
@@ -81,6 +90,7 @@ function AdminDashboard() {
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [editingExerciseId, setEditingExerciseId] = useState(null);
+  const [editingDietPlanId, setEditingDietPlanId] = useState(null);
   const [showMemberForm, setShowMemberForm] = useState(false);
   const [showMemberPassword, setShowMemberPassword] = useState(false);
   const [memberForm, setMemberForm] = useState({
@@ -167,6 +177,11 @@ function AdminDashboard() {
     setWorkoutExercises(data);
   };
 
+  const loadDietPlans = async () => {
+    const data = await fetchJson('http://localhost:5000/api/admin/diet-plans');
+    setDietPlans(data);
+  };
+
   useEffect(() => {
     const loadAll = async () => {
       setError('');
@@ -182,7 +197,8 @@ function AdminDashboard() {
           loadPendingPayments(),
           loadRevenueReport(),
           loadWorkoutPlans(),
-          loadWorkoutExercises()
+          loadWorkoutExercises(),
+          loadDietPlans()
         ]);
       } catch (err) {
         console.error(err);
@@ -620,6 +636,54 @@ function convertTo24Hour(time) {
     }
   };
 
+  const handleDietPlanSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const payload = {
+        member_id: dietPlanForm.member_id,
+        trainer_id: dietPlanForm.trainer_id || null,
+        calorie_target: dietPlanForm.calorie_target,
+        meal_schedule: dietPlanForm.meal_schedule
+      };
+
+      const url = editingDietPlanId
+        ? `http://localhost:5000/api/admin/diet-plans/${editingDietPlanId}`
+        : 'http://localhost:5000/api/admin/diet-plans';
+      const method = editingDietPlanId ? 'PUT' : 'POST';
+
+      await fetchJson(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      await loadDietPlans();
+      setDietPlanForm(emptyDietPlan);
+      setEditingDietPlanId(null);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDietPlanDelete = async (dietPlanId) => {
+    if (!window.confirm('Delete this diet plan?')) {
+      return;
+    }
+    setError('');
+    try {
+      await fetchJson(`http://localhost:5000/api/admin/diet-plans/${dietPlanId}`, { method: 'DELETE' });
+      await loadDietPlans();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="admin-dashboard-wrapper">
       {/* Header */}
@@ -689,6 +753,12 @@ function convertTo24Hour(time) {
             onClick={() => setActiveTab('workout-exercises')}
           >
             Exercises
+          </button>
+          <button
+            className={`admin-tab ${activeTab === 'diet-plans' ? 'active' : ''}`}
+            onClick={() => setActiveTab('diet-plans')}
+          >
+            Diet Plans
           </button>
         </div>
       </div>
@@ -823,6 +893,8 @@ function convertTo24Hour(time) {
                     onChange={(e) => setMemberForm({ ...memberForm, age: e.target.value })}
                     placeholder="Age"
                     autoComplete="off"
+                    min="0"
+                    step="1"
                   />
                   <label className="admin-form-label" htmlFor="member-gender">Gender</label>
                   <input
@@ -970,6 +1042,8 @@ function convertTo24Hour(time) {
                   value={trainerForm.experience_years}
                   onChange={(e) => setTrainerForm({ ...trainerForm, experience_years: e.target.value })}
                   placeholder="Experience (years)"
+                  min="0"
+                  step="1"
                 />
                 <button className="admin-btn-primary" type="submit" disabled={loading}>
                   {loading ? 'Saving...' : editingTrainerId ? 'Update' : 'Add Trainer'}
@@ -1053,6 +1127,8 @@ function convertTo24Hour(time) {
                   value={planForm.duration_months}
                   onChange={(e) => setPlanForm({ ...planForm, duration_months: e.target.value })}
                   placeholder="Duration (months)"
+                  min="0"
+                  step="1"
                 />
                 <label className="admin-form-label" htmlFor="plan-price">Price</label>
                 <input
@@ -1063,6 +1139,8 @@ function convertTo24Hour(time) {
                   value={planForm.price}
                   onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
                   placeholder="Price"
+                  min="0"
+                  step="0.01"
                 />
                 <label className="admin-form-label" htmlFor="plan-description">Benefits / Description</label>
                 <textarea
@@ -1213,6 +1291,8 @@ function convertTo24Hour(time) {
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                   placeholder="Amount (PKR)"
+                  min="0"
+                  step="0.01"
                   required
                 />
                 <select
@@ -1311,6 +1391,8 @@ function convertTo24Hour(time) {
                   value={classForm.capacity}
                   onChange={(e) => setClassForm({ ...classForm, capacity: e.target.value })}
                   placeholder="Capacity"
+                  min="0"
+                  step="1"
                 />
                 <label htmlFor="plan_ids" style={{ fontSize: '14px', fontWeight: '500', marginTop: '10px', display: 'block' }}>
                   Link Membership Plans (Hold Ctrl/Cmd to select multiple):
@@ -1420,6 +1502,8 @@ function convertTo24Hour(time) {
                   value={equipmentForm.quantity}
                   onChange={(e) => setEquipmentForm({ ...equipmentForm, quantity: e.target.value })}
                   placeholder="Quantity"
+                  min="0"
+                  step="1"
                 />
                 <input
                   className="admin-form-input"
@@ -1656,6 +1740,8 @@ function convertTo24Hour(time) {
                   value={workoutExerciseForm.sets}
                   onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, sets: e.target.value })}
                   placeholder="Sets"
+                  min="0"
+                  step="1"
                   required
                 />
                 <label className="admin-form-label" htmlFor="exercise-reps">Reps</label>
@@ -1667,6 +1753,8 @@ function convertTo24Hour(time) {
                   value={workoutExerciseForm.reps}
                   onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, reps: e.target.value })}
                   placeholder="Reps"
+                  min="0"
+                  step="1"
                   required
                 />
                 <label className="admin-form-label" htmlFor="exercise-day">Schedule day</label>
@@ -1743,6 +1831,138 @@ function convertTo24Hour(time) {
                         <button
                           className="admin-btn-danger"
                           onClick={() => handleWorkoutExerciseDelete(exercise.exercise_id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'diet-plans' && (
+          <div className="admin-section-full">
+            <div className="admin-section-header">
+              <h2>Diet Plans</h2>
+              <p>Create diet plans with meal schedules and calorie targets.</p>
+            </div>
+            <div className="admin-grid-layout">
+              <form className="admin-form-panel" onSubmit={handleDietPlanSubmit}>
+                <h3>{editingDietPlanId ? 'Edit' : 'Add'} Diet Plan</h3>
+                <label className="admin-form-label" htmlFor="diet-member">Member</label>
+                <select
+                  className="admin-form-input"
+                  id="diet-member"
+                  name="member_id"
+                  value={dietPlanForm.member_id}
+                  onChange={(e) => setDietPlanForm({ ...dietPlanForm, member_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select member</option>
+                  {members.map((member) => (
+                    <option key={member.member_id} value={member.member_id}>
+                      {member.full_name} (#{member.member_id})
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="diet-trainer">Trainer</label>
+                <select
+                  className="admin-form-input"
+                  id="diet-trainer"
+                  name="trainer_id"
+                  value={dietPlanForm.trainer_id}
+                  onChange={(e) => setDietPlanForm({ ...dietPlanForm, trainer_id: e.target.value })}
+                >
+                  <option value="">Unassigned</option>
+                  {trainers.map((trainer) => (
+                    <option key={trainer.trainer_id} value={trainer.trainer_id}>
+                      {trainer.name}
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="diet-calories">Calorie target</label>
+                <input
+                  className="admin-form-input"
+                  type="number"
+                  id="diet-calories"
+                  name="calorie_target"
+                  value={dietPlanForm.calorie_target}
+                  onChange={(e) => setDietPlanForm({ ...dietPlanForm, calorie_target: e.target.value })}
+                  placeholder="Daily calories"
+                  min="0"
+                  step="1"
+                  required
+                />
+                <label className="admin-form-label" htmlFor="diet-meals">Meal schedule</label>
+                <textarea
+                  className="admin-form-input"
+                  id="diet-meals"
+                  name="meal_schedule"
+                  value={dietPlanForm.meal_schedule}
+                  onChange={(e) => setDietPlanForm({ ...dietPlanForm, meal_schedule: e.target.value })}
+                  placeholder="Breakfast / lunch / dinner"
+                  rows="3"
+                  required
+                ></textarea>
+                <div className="admin-card-actions">
+                  <button className="admin-btn-primary" type="submit" disabled={loading}>
+                    {loading ? 'Saving...' : editingDietPlanId ? 'Update Diet Plan' : 'Add Diet Plan'}
+                  </button>
+                  {editingDietPlanId && (
+                    <button
+                      type="button"
+                      className="admin-btn-secondary"
+                      onClick={() => {
+                        setEditingDietPlanId(null);
+                        setDietPlanForm(emptyDietPlan);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="admin-list-panel">
+                <h3>Diet Plans</h3>
+                {dietPlans.length === 0 ? (
+                  <p className="admin-empty">No diet plans yet.</p>
+                ) : (
+                  dietPlans.map((plan) => (
+                    <div key={plan.diet_plan_id} className="admin-card admin-card-stack">
+                      <div>
+                        <h4>Plan #{plan.diet_plan_id}</h4>
+                        <p className="admin-card-email">
+                          Member: {plan.member_name || plan.member_id} · Trainer: {plan.trainer_name || 'Unassigned'}
+                        </p>
+                        <div className="admin-card-meta">
+                          <span>{plan.calorie_target} kcal</span>
+                        </div>
+                        <p style={{ marginTop: '8px' }}>
+                          {plan.meal_schedule}
+                        </p>
+                      </div>
+                      <div className="admin-card-actions">
+                        <button
+                          className="admin-btn-secondary"
+                          onClick={() => {
+                            setEditingDietPlanId(plan.diet_plan_id);
+                            setDietPlanForm({
+                              member_id: plan.member_id ? String(plan.member_id) : '',
+                              trainer_id: plan.trainer_id ? String(plan.trainer_id) : '',
+                              calorie_target: plan.calorie_target ?? '',
+                              meal_schedule: plan.meal_schedule || ''
+                            });
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="admin-btn-danger"
+                          onClick={() => handleDietPlanDelete(plan.diet_plan_id)}
                         >
                           Delete
                         </button>

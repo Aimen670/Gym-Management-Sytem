@@ -188,6 +188,8 @@ function Auth() {
                     value={formData.age}
                     onChange={handleInputChange}
                     placeholder="Your age"
+                    min="0"
+                    step="1"
                     required
                   />
                 </div>

@@ -145,6 +145,8 @@ function Signup() {
                     value={formData.age}
                     onChange={handleChange}
                     placeholder="Enter your age"
+                    min="0"
+                    step="1"
                   />
                 </div>
 

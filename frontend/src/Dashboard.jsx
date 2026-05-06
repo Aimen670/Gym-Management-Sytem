@@ -314,6 +314,7 @@ function Dashboard() {
   const upcomingClasses = dashboard?.upcomingClasses ?? [];
   const upcomingSessions = dashboard?.upcomingSessions ?? [];
   const workoutPlans = dashboard?.workoutPlans ?? [];
+  const dietPlans = dashboard?.dietPlans ?? [];
   const completed30 = dashboard?.stats?.completed_sessions_last_30 ?? 0;
 
   const greeting = useMemo(() => {
@@ -380,6 +381,7 @@ function Dashboard() {
             { id: 'membership', label: 'Membership' },
             { id: 'schedule', label: 'Schedule' },
             { id: 'workouts', label: 'Workout plans' },
+            { id: 'diet', label: 'Diet plans' },
             { id: 'trainers', label: 'Trainers' }
           ].map((item) => (
             <button
@@ -707,6 +709,29 @@ function Dashboard() {
                           No exercises listed for this plan.
                         </p>
                       )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeNav === 'diet' && (
+            <section className="member-card member-card-pad member-card-wide">
+              <h2>Diet plans</h2>
+              {dietPlans.length === 0 ? (
+                <p className="member-muted">No diet plans assigned yet. Check back later.</p>
+              ) : (
+                <div className="member-grid-2">
+                  {dietPlans.map((plan) => (
+                    <article key={plan.diet_plan_id} className="member-card member-card-pad">
+                      <h3>Plan #{plan.diet_plan_id}</h3>
+                      <p className="member-muted">
+                        Trainer: {plan.trainer_name || 'Unassigned'}
+                      </p>
+                      <p className="member-pill">{plan.calorie_target} kcal daily</p>
+                      <h4>Meal schedule</h4>
+                      <p>{plan.meal_schedule}</p>
                     </article>
                   ))}
                 </div>

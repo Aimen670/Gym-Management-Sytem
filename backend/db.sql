@@ -258,4 +258,10 @@ INSERT INTO workout_exercises (workout_plan_id, exercise_name, sets, reps, sched
 (3, 'Deadlift', 4, 6, 'friday'),
 (3, 'Overhead Press', 3, 8, 'friday');
 
+-- Diet Plans Data
+INSERT INTO diet_plans (member_id, trainer_id, calorie_target, meal_schedule) VALUES
+(1, 1, 2800, 'Breakfast: oats + eggs; Lunch: chicken bowl; Dinner: salmon + rice'),
+(2, 2, 2200, 'Breakfast: yogurt + fruit; Lunch: salad + chicken; Dinner: stir-fry + veggies'),
+(3, 3, 2500, 'Breakfast: smoothie + toast; Lunch: tuna wrap; Dinner: turkey + sweet potato');
+
 
