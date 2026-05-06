@@ -672,7 +672,7 @@
 
 .admin-workout-exercise-option {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(280px, 1fr);
   gap: 10px;
   align-items: start;
   padding: 10px 12px;
@@ -704,6 +704,7 @@
   grid-template-columns: 1fr;
   gap: 12px;
   margin-top: 8px;
+  width: 100%;
 }
 
 .admin-exercise-field {
@@ -722,7 +723,7 @@
 .admin-workout-exercise-fields .admin-form-input {
   color: #ffffff;
   width: 100%;
-  min-width: 220px;
+  min-width: 260px;
 }
 
 .admin-workout-exercise-row {

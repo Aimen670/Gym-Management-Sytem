@@ -114,6 +114,15 @@ function Dashboard() {
   }));
   const [measurementNote, setMeasurementNote] = useState('');
   const [measurementBusy, setMeasurementBusy] = useState(false);
+  const [workoutLogForm, setWorkoutLogForm] = useState(() => ({
+    workout_plan_id: '',
+    exercise_id: '',
+    weight_used: '',
+    reps_completed: '',
+    log_date: new Date().toISOString().slice(0, 10)
+  }));
+  const [workoutLogNote, setWorkoutLogNote] = useState('');
+  const [workoutLogBusy, setWorkoutLogBusy] = useState(false);
   const [subscribeBusyId, setSubscribeBusyId] = useState(null);
   const [subscribeNote, setSubscribeNote] = useState('');
   const [planPayMethod, setPlanPayMethod] = useState({});
@@ -352,6 +361,44 @@ function Dashboard() {
     }
   }
 
+  async function handleWorkoutLogSubmit(e) {
+    e.preventDefault();
+    if (!memberId) return;
+    setWorkoutLogBusy(true);
+    setWorkoutLogNote('');
+    try {
+      const payload = {
+        workout_plan_id: workoutLogForm.workout_plan_id,
+        exercise_id: workoutLogForm.exercise_id,
+        weight_used: workoutLogForm.weight_used,
+        reps_completed: workoutLogForm.reps_completed,
+        log_date: workoutLogForm.log_date || undefined
+      };
+      const res = await fetch(`/api/member/${memberId}/workout-logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Could not save workout log');
+      }
+      setWorkoutLogNote('Workout log saved.');
+      setWorkoutLogForm((prev) => ({
+        ...prev,
+        exercise_id: '',
+        weight_used: '',
+        reps_completed: ''
+      }));
+      await refreshDashboard();
+    } catch (err) {
+      console.error(err);
+      setWorkoutLogNote(err.message);
+    } finally {
+      setWorkoutLogBusy(false);
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('memberProfile');
@@ -365,7 +412,19 @@ function Dashboard() {
   const workoutPlans = dashboard?.workoutPlans ?? [];
   const dietPlans = dashboard?.dietPlans ?? [];
   const bodyMeasurements = dashboard?.bodyMeasurements ?? [];
+  const workoutLogs = dashboard?.workoutLogs ?? [];
+  const workoutLogStats = dashboard?.workoutLogStats ?? {};
   const completed30 = dashboard?.stats?.completed_sessions_last_30 ?? 0;
+
+  const selectedLogPlan = useMemo(() => {
+    if (!workoutLogForm.workout_plan_id) return null;
+    return workoutPlans.find((plan) => String(plan.workout_plan_id) === String(workoutLogForm.workout_plan_id));
+  }, [workoutLogForm.workout_plan_id, workoutPlans]);
+
+  const logPlanExercises = useMemo(() => {
+    if (!selectedLogPlan?.exercises) return [];
+    return selectedLogPlan.exercises.filter((exercise) => exercise.exercise_catalog_id != null);
+  }, [selectedLogPlan]);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -433,7 +492,8 @@ function Dashboard() {
             { id: 'workouts', label: 'Workout plans' },
             { id: 'diet', label: 'Diet plans' },
             { id: 'measurements', label: 'Body measurements' },
-            { id: 'trainers', label: 'Trainers' }
+            { id: 'trainers', label: 'Trainers' },
+            { id: 'workout-log', label: 'Workout log' }
           ].map((item) => (
             <button
               key={item.id}
@@ -1105,6 +1165,190 @@ function Dashboard() {
                           <span>{trainer.experience_years} yrs experience</span>
                         )}
                         {trainer.email && <span>{trainer.email}</span>}
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </section>
+          )}
+
+          {activeNav === 'workout-log' && (
+            <section className="member-card member-card-pad member-card-wide">
+              <h2>Workout log</h2>
+              <p className="member-muted">Log completed workouts and track progress over time.</p>
+
+              <section className="member-stats" aria-label="Workout log stats">
+                <article className="member-stat-card">
+                  <span className="member-stat-label">Total logs</span>
+                  <strong className="member-stat-value">{workoutLogStats.total_logs ?? 0}</strong>
+                  <p className="member-stat-foot">
+                    {workoutLogStats.last_log_date
+                      ? `Last log ${formatDate(workoutLogStats.last_log_date)}`
+                      : 'No workouts logged yet'}
+                  </p>
+                </article>
+                <article className="member-stat-card">
+                  <span className="member-stat-label">Frequency</span>
+                  <strong className="member-stat-value">{workoutLogStats.logs_last_7 ?? 0}</strong>
+                  <p className="member-stat-foot">
+                    {workoutLogStats.logs_last_30 ?? 0} logs in the last 30 days
+                  </p>
+                </article>
+                <article className="member-stat-card">
+                  <span className="member-stat-label">Unique exercises</span>
+                  <strong className="member-stat-value">{workoutLogStats.unique_exercises ?? 0}</strong>
+                  <p className="member-stat-foot">Distinct exercises logged</p>
+                </article>
+                <article className="member-stat-card">
+                  <span className="member-stat-label">Max weight</span>
+                  <strong className="member-stat-value">
+                    {workoutLogStats.max_weight != null
+                      ? `${Number(workoutLogStats.max_weight).toFixed(1)} kg`
+                      : '—'}
+                  </strong>
+                  <p className="member-stat-foot">
+                    Avg: {workoutLogStats.avg_weight != null ? `${Number(workoutLogStats.avg_weight).toFixed(1)} kg` : '—'}
+                  </p>
+                </article>
+              </section>
+
+              <form className="member-membership-box" onSubmit={handleWorkoutLogSubmit}>
+                <h3>Log a workout</h3>
+                <div className="member-detail-grid">
+                  <div>
+                    <span className="member-detail-label">Workout plan</span>
+                    <select
+                      className="member-input"
+                      value={workoutLogForm.workout_plan_id}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setWorkoutLogForm((prev) => ({
+                          ...prev,
+                          workout_plan_id: value,
+                          exercise_id: ''
+                        }));
+                      }}
+                      required
+                    >
+                      <option value="">Select plan…</option>
+                      {workoutPlans.map((plan) => (
+                        <option key={plan.workout_plan_id} value={plan.workout_plan_id}>
+                          Plan #{plan.workout_plan_id} {plan.trainer_name ? `(${plan.trainer_name})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Exercise</span>
+                    <select
+                      className="member-input"
+                      value={workoutLogForm.exercise_id}
+                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, exercise_id: e.target.value }))}
+                      disabled={!workoutLogForm.workout_plan_id}
+                      required
+                    >
+                      <option value="">{workoutLogForm.workout_plan_id ? 'Select exercise…' : 'Choose plan first'}</option>
+                      {logPlanExercises.map((exercise) => (
+                        <option key={exercise.exercise_id} value={exercise.exercise_catalog_id}>
+                          {exercise.exercise_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Weight (kg)</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={workoutLogForm.weight_used}
+                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, weight_used: e.target.value }))}
+                      min="0"
+                      step="0.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Reps completed</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={workoutLogForm.reps_completed}
+                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, reps_completed: e.target.value }))}
+                      min="0"
+                      step="1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Log date</span>
+                    <input
+                      type="date"
+                      className="member-input"
+                      value={workoutLogForm.log_date}
+                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, log_date: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                {workoutLogNote && (
+                  <p
+                    className={
+                      workoutLogNote.toLowerCase().includes('could not') ||
+                      workoutLogNote.toLowerCase().includes('invalid') ||
+                      workoutLogNote.toLowerCase().includes('failed')
+                        ? 'member-subscribe-msg member-subscribe-msg-err'
+                        : 'member-subscribe-msg member-subscribe-msg-ok'
+                    }
+                    style={{ marginTop: 12 }}
+                  >
+                    {workoutLogNote}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="member-plan-subscribe-btn"
+                  style={{ marginTop: 12 }}
+                  disabled={workoutLogBusy || workoutPlans.length === 0}
+                >
+                  {workoutLogBusy ? 'Saving…' : 'Save workout log'}
+                </button>
+                {workoutPlans.length === 0 && (
+                  <p className="member-muted" style={{ marginTop: 10 }}>
+                    No workout plans assigned yet. Ask your trainer to set one up.
+                  </p>
+                )}
+              </form>
+
+              <div className="member-workout-grid" style={{ marginTop: 20 }}>
+                {workoutLogs.length === 0 ? (
+                  <p className="member-muted">No workout logs yet.</p>
+                ) : (
+                  workoutLogs.map((log) => (
+                    <article key={log.log_id} className="member-workout-card">
+                      <div className="member-workout-head">
+                        <div>
+                          <h3>{log.exercise_name || 'Workout'}</h3>
+                          <p className="member-muted">Plan #{log.workout_plan_id}</p>
+                        </div>
+                        <span className="member-workout-date">Logged {formatDate(log.log_date)}</span>
+                      </div>
+                      <div className="member-workout-table">
+                        <div className="member-workout-row member-workout-row-head">
+                          <span>Weight</span>
+                          <span>Reps</span>
+                          <span>Exercise</span>
+                          <span>Date</span>
+                        </div>
+                        <div className="member-workout-row">
+                          <span>
+                            {log.weight_used != null ? `${Number(log.weight_used).toFixed(1)} kg` : '—'}
+                          </span>
+                          <span>{log.reps_completed ?? '—'}</span>
+                          <span>{log.exercise_name || '—'}</span>
+                          <span>{formatDate(log.log_date)}</span>
+                        </div>
                       </div>
                     </article>
                   ))

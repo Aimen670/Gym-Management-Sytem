@@ -49,7 +49,9 @@ const {
     getMembershipPlansBrowseHandler,
     subscribeMemberHandler,
     getMemberBodyMeasurementsHandler,
-    createMemberBodyMeasurementHandler
+    createMemberBodyMeasurementHandler,
+    getMemberWorkoutLogsHandler,
+    createMemberWorkoutLogHandler
 } = require('../controllers/memberPortalController');
 
 router.get('/admin/overview', getAdminOverview);
@@ -59,6 +61,8 @@ router.get('/member/:memberId/dashboard', getMemberDashboardHandler);
 router.post('/member/:memberId/subscribe', subscribeMemberHandler);
 router.get('/member/:memberId/body-measurements', getMemberBodyMeasurementsHandler);
 router.post('/member/:memberId/body-measurements', createMemberBodyMeasurementHandler);
+router.get('/member/:memberId/workout-logs', getMemberWorkoutLogsHandler);
+router.post('/member/:memberId/workout-logs', createMemberWorkoutLogHandler);
 
 router.get('/admin/members', getMembers);
 router.post('/admin/members', createMemberHandler);

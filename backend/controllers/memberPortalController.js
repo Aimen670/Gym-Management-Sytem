@@ -2,7 +2,9 @@ const {
     getMemberDashboard,
     subscribeMember,
     getBodyMeasurementsForMember,
-    createBodyMeasurement
+    createBodyMeasurement,
+    getWorkoutLogsForMember,
+    createWorkoutLog
 } = require('../models/memberPortalModel');
 const { getPlansForBrowse } = require('../models/planModel');
 
@@ -89,10 +91,44 @@ async function createMemberBodyMeasurementHandler(req, res) {
     }
 }
 
+async function getMemberWorkoutLogsHandler(req, res) {
+    try {
+        const memberId = parseInt(req.params.memberId, 10);
+        if (Number.isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member id' });
+        }
+
+        const logs = await getWorkoutLogsForMember(memberId);
+        res.json(logs);
+    } catch (err) {
+        console.error('Workout logs fetch error:', err);
+        res.status(500).json({ error: 'Failed to load workout logs' });
+    }
+}
+
+async function createMemberWorkoutLogHandler(req, res) {
+    try {
+        const memberId = parseInt(req.params.memberId, 10);
+        if (Number.isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member id' });
+        }
+
+        const created = await createWorkoutLog(memberId, req.body || {});
+        res.status(201).json(created);
+    } catch (err) {
+        console.error('Workout log create error:', err);
+        const msg = err.message || 'Failed to create workout log';
+        const status = msg.includes('not found') || msg.includes('not part') ? 404 : 400;
+        res.status(status).json({ error: msg });
+    }
+}
+
 module.exports = {
     getMemberDashboardHandler,
     getMembershipPlansBrowseHandler,
     subscribeMemberHandler,
     getMemberBodyMeasurementsHandler,
-    createMemberBodyMeasurementHandler
+    createMemberBodyMeasurementHandler,
+    getMemberWorkoutLogsHandler,
+    createMemberWorkoutLogHandler
 };

@@ -38,6 +38,7 @@ async function getWorkoutPlansForMember(memberId) {
         SELECT
             wpe.plan_exercise_id AS exercise_id,
             wpe.workout_plan_id,
+            wpe.exercise_id AS exercise_catalog_id,
             e.exercise_name,
             wpe.sets,
             wpe.reps,
@@ -76,6 +77,138 @@ async function getBodyMeasurementsForMember(memberId) {
         `);
 
     return result.recordset;
+}
+
+async function getWorkoutLogsForMember(memberId) {
+    const pool = getPool();
+    const result = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query(`
+            SELECT
+                wl.log_id,
+                wl.workout_plan_id,
+                wl.exercise_id,
+                e.exercise_name,
+                wl.weight_used,
+                wl.reps_completed,
+                wl.log_date
+            FROM workout_logs wl
+            JOIN exercises e ON wl.exercise_id = e.exercise_id
+            WHERE wl.member_id = @member_id
+            ORDER BY wl.log_date DESC, wl.log_id DESC
+        `);
+
+    return result.recordset;
+}
+
+async function getWorkoutLogStatsForMember(memberId) {
+    const pool = getPool();
+    const result = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query(`
+            SELECT
+                COUNT(*) AS total_logs,
+                COUNT(DISTINCT exercise_id) AS unique_exercises,
+                MAX(weight_used) AS max_weight,
+                AVG(weight_used) AS avg_weight,
+                AVG(reps_completed) AS avg_reps,
+                MAX(log_date) AS last_log_date,
+                SUM(CASE WHEN log_date >= DATEADD(day, -7, CAST(GETDATE() AS DATE)) THEN 1 ELSE 0 END) AS logs_last_7,
+                SUM(CASE WHEN log_date >= DATEADD(day, -30, CAST(GETDATE() AS DATE)) THEN 1 ELSE 0 END) AS logs_last_30
+            FROM workout_logs
+            WHERE member_id = @member_id
+        `);
+
+    const row = result.recordset[0] || {};
+    return {
+        total_logs: row.total_logs ?? 0,
+        unique_exercises: row.unique_exercises ?? 0,
+        max_weight: row.max_weight ?? 0,
+        avg_weight: row.avg_weight ?? 0,
+        avg_reps: row.avg_reps ?? 0,
+        last_log_date: row.last_log_date ?? null,
+        logs_last_7: row.logs_last_7 ?? 0,
+        logs_last_30: row.logs_last_30 ?? 0
+    };
+}
+
+async function createWorkoutLog(memberId, payload) {
+    const planId = parseInt(payload.workout_plan_id, 10);
+    const exerciseId = parseInt(payload.exercise_id, 10);
+    const weightUsed = parseFloat(payload.weight_used);
+    const repsCompleted = parseInt(payload.reps_completed, 10);
+    const logRaw = payload.log_date ? String(payload.log_date).trim() : '';
+
+    if (Number.isNaN(planId)) {
+        throw new Error('workout_plan_id is required');
+    }
+    if (Number.isNaN(exerciseId)) {
+        throw new Error('exercise_id is required');
+    }
+    if (Number.isNaN(weightUsed) || weightUsed < 0) {
+        throw new Error('Weight must be 0 or a positive number');
+    }
+    if (Number.isNaN(repsCompleted) || repsCompleted < 0) {
+        throw new Error('Reps must be 0 or a positive number');
+    }
+
+    let logDate = null;
+    if (logRaw) {
+        const d = new Date(logRaw);
+        if (Number.isNaN(d.getTime())) {
+            throw new Error('Invalid log date');
+        }
+        logDate = d.toISOString().slice(0, 10);
+    }
+
+    const pool = getPool();
+    const planCheck = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .input('workout_plan_id', sql.Int, planId)
+        .query('SELECT workout_plan_id FROM workout_plans WHERE workout_plan_id = @workout_plan_id AND member_id = @member_id');
+
+    if (planCheck.recordset.length === 0) {
+        throw new Error('Workout plan not found for this member');
+    }
+
+    const exerciseCheck = await pool.request()
+        .input('workout_plan_id', sql.Int, planId)
+        .input('exercise_id', sql.Int, exerciseId)
+        .query('SELECT 1 FROM workout_plan_exercises WHERE workout_plan_id = @workout_plan_id AND exercise_id = @exercise_id');
+
+    if (exerciseCheck.recordset.length === 0) {
+        throw new Error('Exercise is not part of the selected plan');
+    }
+
+    const insertResult = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .input('workout_plan_id', sql.Int, planId)
+        .input('exercise_id', sql.Int, exerciseId)
+        .input('weight_used', sql.Decimal(6, 2), weightUsed)
+        .input('reps_completed', sql.Int, repsCompleted)
+        .input('log_date', sql.Date, logDate)
+        .query(`
+            INSERT INTO workout_logs (member_id, workout_plan_id, exercise_id, weight_used, reps_completed, log_date)
+            OUTPUT INSERTED.log_id, INSERTED.log_date
+            VALUES (
+                @member_id,
+                @workout_plan_id,
+                @exercise_id,
+                @weight_used,
+                @reps_completed,
+                COALESCE(@log_date, CAST(GETDATE() AS DATE))
+            )
+        `);
+
+    return {
+        log_id: insertResult.recordset[0].log_id,
+        member_id: memberId,
+        workout_plan_id: planId,
+        exercise_id: exerciseId,
+        weight_used: weightUsed,
+        reps_completed: repsCompleted,
+        log_date: insertResult.recordset[0].log_date
+    };
 }
 
 async function createBodyMeasurement(memberId, payload) {
@@ -247,6 +380,8 @@ async function getMemberDashboard(memberId) {
         `);
 
     const bodyMeasurements = await getBodyMeasurementsForMember(memberId);
+    const workoutLogs = await getWorkoutLogsForMember(memberId);
+    const workoutLogStats = await getWorkoutLogStatsForMember(memberId);
 
     return {
         profile,
@@ -256,6 +391,8 @@ async function getMemberDashboard(memberId) {
         workoutPlans,
         dietPlans: dietPlansResult.recordset,
         bodyMeasurements,
+        workoutLogs,
+        workoutLogStats,
         stats: {
             completed_sessions_last_30: completedResult.recordset[0]?.completed_last_30 ?? 0
         }
@@ -366,5 +503,8 @@ module.exports = {
     getMemberDashboard,
     subscribeMember,
     getBodyMeasurementsForMember,
-    createBodyMeasurement
+    createBodyMeasurement,
+    getWorkoutLogsForMember,
+    createWorkoutLog,
+    getWorkoutLogStatsForMember
 };
