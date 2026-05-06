@@ -1,4 +1,11 @@
-const { getWorkoutPlansAdmin, getWorkoutExercisesAdmin, createWorkoutPlan } = require('../models/workoutPlanModel');
+const {
+  getWorkoutPlansAdmin,
+  getWorkoutExercisesAdmin,
+  createWorkoutPlan,
+  createWorkoutExercise,
+  updateWorkoutExercise,
+  deleteWorkoutExercise
+} = require('../models/workoutPlanModel');
 
 async function getWorkoutPlansAdminHandler(req, res) {
   try {
@@ -31,8 +38,53 @@ async function getWorkoutExercisesAdminHandler(req, res) {
   }
 }
 
+async function createWorkoutExerciseHandler(req, res) {
+  try {
+    const created = await createWorkoutExercise(req.body);
+    res.status(201).json(created);
+  } catch (err) {
+    console.error('Workout exercise create error:', err);
+    res.status(400).json({ error: err.message || 'Failed to create exercise' });
+  }
+}
+
+async function updateWorkoutExerciseHandler(req, res) {
+  try {
+    const exerciseId = parseInt(req.params.id, 10);
+    if (Number.isNaN(exerciseId)) {
+      return res.status(400).json({ error: 'Invalid exercise id' });
+    }
+
+    const updated = await updateWorkoutExercise(exerciseId, req.body);
+    res.json(updated);
+  } catch (err) {
+    console.error('Workout exercise update error:', err);
+    const statusCode = err.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to update exercise' });
+  }
+}
+
+async function deleteWorkoutExerciseHandler(req, res) {
+  try {
+    const exerciseId = parseInt(req.params.id, 10);
+    if (Number.isNaN(exerciseId)) {
+      return res.status(400).json({ error: 'Invalid exercise id' });
+    }
+
+    await deleteWorkoutExercise(exerciseId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Workout exercise delete error:', err);
+    const statusCode = err.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to delete exercise' });
+  }
+}
+
 module.exports = {
   getWorkoutPlansAdminHandler,
   createWorkoutPlanHandler,
-  getWorkoutExercisesAdminHandler
+  getWorkoutExercisesAdminHandler,
+  createWorkoutExerciseHandler,
+  updateWorkoutExerciseHandler,
+  deleteWorkoutExerciseHandler
 };

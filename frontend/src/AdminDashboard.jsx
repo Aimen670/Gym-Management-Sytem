@@ -45,6 +45,14 @@ const emptyWorkoutPlan = {
   exercise_ids: []
 };
 
+const emptyWorkoutExercise = {
+  workout_plan_id: '',
+  exercise_name: '',
+  sets: '',
+  reps: '',
+  schedule_day: ''
+};
+
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [overview, setOverview] = useState(null);
@@ -65,12 +73,14 @@ function AdminDashboard() {
   const [equipmentForm, setEquipmentForm] = useState(emptyEquipment);
   const [paymentForm, setPaymentForm] = useState(emptyPayment);
   const [workoutPlanForm, setWorkoutPlanForm] = useState(emptyWorkoutPlan);
+  const [workoutExerciseForm, setWorkoutExerciseForm] = useState(emptyWorkoutExercise);
 
   const [editingTrainerId, setEditingTrainerId] = useState(null);
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [editingClassId, setEditingClassId] = useState(null);
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
+  const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [showMemberForm, setShowMemberForm] = useState(false);
   const [showMemberPassword, setShowMemberPassword] = useState(false);
   const [memberForm, setMemberForm] = useState({
@@ -558,6 +568,55 @@ function convertTo24Hour(time) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWorkoutExerciseSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const payload = {
+        workout_plan_id: workoutExerciseForm.workout_plan_id,
+        exercise_name: workoutExerciseForm.exercise_name,
+        sets: workoutExerciseForm.sets,
+        reps: workoutExerciseForm.reps,
+        schedule_day: workoutExerciseForm.schedule_day || null
+      };
+
+      const url = editingExerciseId
+        ? `http://localhost:5000/api/admin/workout-exercises/${editingExerciseId}`
+        : 'http://localhost:5000/api/admin/workout-exercises';
+      const method = editingExerciseId ? 'PUT' : 'POST';
+
+      await fetchJson(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      await Promise.all([loadWorkoutExercises(), loadWorkoutPlans()]);
+      setWorkoutExerciseForm(emptyWorkoutExercise);
+      setEditingExerciseId(null);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWorkoutExerciseDelete = async (exerciseId) => {
+    if (!window.confirm('Delete this exercise?')) {
+      return;
+    }
+    setError('');
+    try {
+      await fetchJson(`http://localhost:5000/api/admin/workout-exercises/${exerciseId}`, { method: 'DELETE' });
+      await Promise.all([loadWorkoutExercises(), loadWorkoutPlans()]);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
     }
   };
 
@@ -1557,30 +1616,141 @@ function convertTo24Hour(time) {
           <div className="admin-section-full">
             <div className="admin-section-header">
               <h2>Workout Exercises</h2>
-              <p>Browse all exercises with sets, reps, and schedules.</p>
+              <p>Add, update, or remove exercises used in workout plans.</p>
             </div>
-            <div className="admin-list-panel">
-              <h3>Exercises</h3>
-              {workoutExercises.length === 0 ? (
-                <p className="admin-empty">No exercises yet.</p>
-              ) : (
-                workoutExercises.map((exercise) => (
-                  <div key={exercise.exercise_id} className="admin-card admin-card-stack">
-                    <div>
-                      <h4>{exercise.exercise_name}</h4>
-                      <p className="admin-card-email">
-                        Plan #{exercise.workout_plan_id} · Member: {exercise.member_name || exercise.member_id}
-                      </p>
-                      <div className="admin-card-meta">
-                        <span>{exercise.sets} sets</span>
-                        <span>{exercise.reps} reps</span>
-                        <span>{exercise.schedule_day || 'Any day'}</span>
-                        <span>{exercise.trainer_name || 'Unassigned'}</span>
+            <div className="admin-grid-layout">
+              <form className="admin-form-panel" onSubmit={handleWorkoutExerciseSubmit}>
+                <h3>{editingExerciseId ? 'Edit' : 'Add'} Exercise</h3>
+                <label className="admin-form-label" htmlFor="exercise-plan">Workout plan</label>
+                <select
+                  className="admin-form-input"
+                  id="exercise-plan"
+                  name="workout_plan_id"
+                  value={workoutExerciseForm.workout_plan_id}
+                  onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, workout_plan_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select workout plan</option>
+                  {workoutPlans.map((plan) => (
+                    <option key={plan.workout_plan_id} value={plan.workout_plan_id}>
+                      Plan #{plan.workout_plan_id} · {plan.member_name || plan.member_id}
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="exercise-name">Exercise name</label>
+                <input
+                  className="admin-form-input"
+                  id="exercise-name"
+                  name="exercise_name"
+                  value={workoutExerciseForm.exercise_name}
+                  onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, exercise_name: e.target.value })}
+                  placeholder="Exercise name"
+                  required
+                />
+                <label className="admin-form-label" htmlFor="exercise-sets">Sets</label>
+                <input
+                  className="admin-form-input"
+                  type="number"
+                  id="exercise-sets"
+                  name="sets"
+                  value={workoutExerciseForm.sets}
+                  onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, sets: e.target.value })}
+                  placeholder="Sets"
+                  required
+                />
+                <label className="admin-form-label" htmlFor="exercise-reps">Reps</label>
+                <input
+                  className="admin-form-input"
+                  type="number"
+                  id="exercise-reps"
+                  name="reps"
+                  value={workoutExerciseForm.reps}
+                  onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, reps: e.target.value })}
+                  placeholder="Reps"
+                  required
+                />
+                <label className="admin-form-label" htmlFor="exercise-day">Schedule day</label>
+                <select
+                  className="admin-form-input"
+                  id="exercise-day"
+                  name="schedule_day"
+                  value={workoutExerciseForm.schedule_day}
+                  onChange={(e) => setWorkoutExerciseForm({ ...workoutExerciseForm, schedule_day: e.target.value })}
+                >
+                  <option value="">Any day</option>
+                  <option value="monday">Monday</option>
+                  <option value="tuesday">Tuesday</option>
+                  <option value="wednesday">Wednesday</option>
+                  <option value="thursday">Thursday</option>
+                  <option value="friday">Friday</option>
+                  <option value="saturday">Saturday</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+                <div className="admin-card-actions">
+                  <button className="admin-btn-primary" type="submit" disabled={loading}>
+                    {loading ? 'Saving...' : editingExerciseId ? 'Update Exercise' : 'Add Exercise'}
+                  </button>
+                  {editingExerciseId && (
+                    <button
+                      type="button"
+                      className="admin-btn-secondary"
+                      onClick={() => {
+                        setEditingExerciseId(null);
+                        setWorkoutExerciseForm(emptyWorkoutExercise);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="admin-list-panel">
+                <h3>Exercises</h3>
+                {workoutExercises.length === 0 ? (
+                  <p className="admin-empty">No exercises yet.</p>
+                ) : (
+                  workoutExercises.map((exercise) => (
+                    <div key={exercise.exercise_id} className="admin-card admin-card-stack">
+                      <div>
+                        <h4>{exercise.exercise_name}</h4>
+                        <p className="admin-card-email">
+                          Plan #{exercise.workout_plan_id} · Member: {exercise.member_name || exercise.member_id}
+                        </p>
+                        <div className="admin-card-meta">
+                          <span>{exercise.sets} sets</span>
+                          <span>{exercise.reps} reps</span>
+                          <span>{exercise.schedule_day || 'Any day'}</span>
+                          <span>{exercise.trainer_name || 'Unassigned'}</span>
+                        </div>
+                      </div>
+                      <div className="admin-card-actions">
+                        <button
+                          className="admin-btn-secondary"
+                          onClick={() => {
+                            setEditingExerciseId(exercise.exercise_id);
+                            setWorkoutExerciseForm({
+                              workout_plan_id: exercise.workout_plan_id ? String(exercise.workout_plan_id) : '',
+                              exercise_name: exercise.exercise_name || '',
+                              sets: exercise.sets ?? '',
+                              reps: exercise.reps ?? '',
+                              schedule_day: exercise.schedule_day || ''
+                            });
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="admin-btn-danger"
+                          onClick={() => handleWorkoutExerciseDelete(exercise.exercise_id)}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}

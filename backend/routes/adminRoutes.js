@@ -17,7 +17,10 @@ const {
 const {
     getWorkoutPlansAdminHandler,
     createWorkoutPlanHandler,
-    getWorkoutExercisesAdminHandler
+    getWorkoutExercisesAdminHandler,
+    createWorkoutExerciseHandler,
+    updateWorkoutExerciseHandler,
+    deleteWorkoutExerciseHandler
 } = require('../controllers/workoutPlanController');
 const {
     getEquipmentHandler,
@@ -76,5 +79,8 @@ router.delete('/admin/equipment/:id', deleteEquipmentHandler);
 router.get('/admin/workout-plans', getWorkoutPlansAdminHandler);
 router.post('/admin/workout-plans', createWorkoutPlanHandler);
 router.get('/admin/workout-exercises', getWorkoutExercisesAdminHandler);
+router.post('/admin/workout-exercises', createWorkoutExerciseHandler);
+router.put('/admin/workout-exercises/:id', updateWorkoutExerciseHandler);
+router.delete('/admin/workout-exercises/:id', deleteWorkoutExerciseHandler);
 
 module.exports = router;
