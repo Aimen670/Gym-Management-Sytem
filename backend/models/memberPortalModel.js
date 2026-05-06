@@ -57,6 +57,95 @@ async function getWorkoutPlansForMember(memberId) {
     return plans;
 }
 
+async function getBodyMeasurementsForMember(memberId) {
+    const pool = getPool();
+    const result = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query(`
+            SELECT
+                measurement_id,
+                weight,
+                bmi,
+                body_fat,
+                muscle_mass,
+                record_date
+            FROM body_measurements
+            WHERE member_id = @member_id
+            ORDER BY record_date DESC, measurement_id DESC
+        `);
+
+    return result.recordset;
+}
+
+async function createBodyMeasurement(memberId, payload) {
+    const weight = parseFloat(payload.weight);
+    const bmi = parseFloat(payload.bmi);
+    const bodyFat = payload.body_fat === '' || payload.body_fat == null ? null : parseFloat(payload.body_fat);
+    const muscleMass = payload.muscle_mass === '' || payload.muscle_mass == null ? null : parseFloat(payload.muscle_mass);
+    const recordRaw = payload.record_date ? String(payload.record_date).trim() : '';
+
+    if (Number.isNaN(weight) || weight <= 0) {
+        throw new Error('Weight must be a positive number');
+    }
+    if (Number.isNaN(bmi) || bmi <= 0) {
+        throw new Error('BMI must be a positive number');
+    }
+    if (bodyFat !== null && (Number.isNaN(bodyFat) || bodyFat < 0)) {
+        throw new Error('Body fat must be 0 or a positive number');
+    }
+    if (muscleMass !== null && (Number.isNaN(muscleMass) || muscleMass < 0)) {
+        throw new Error('Muscle mass must be 0 or a positive number');
+    }
+
+    let recordDate = null;
+    if (recordRaw) {
+        const d = new Date(recordRaw);
+        if (Number.isNaN(d.getTime())) {
+            throw new Error('Invalid record date');
+        }
+        recordDate = d.toISOString().slice(0, 10);
+    }
+
+    const pool = getPool();
+    const memberCheck = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .query('SELECT member_id FROM members WHERE member_id = @member_id');
+
+    if (memberCheck.recordset.length === 0) {
+        throw new Error('Member not found');
+    }
+
+    const insertResult = await pool.request()
+        .input('member_id', sql.Int, memberId)
+        .input('weight', sql.Decimal(5, 2), weight)
+        .input('bmi', sql.Decimal(5, 2), bmi)
+        .input('body_fat', sql.Decimal(5, 2), bodyFat)
+        .input('muscle_mass', sql.Decimal(5, 2), muscleMass)
+        .input('record_date', sql.Date, recordDate)
+        .query(`
+            INSERT INTO body_measurements (member_id, weight, bmi, body_fat, muscle_mass, record_date)
+            VALUES (
+                @member_id,
+                @weight,
+                @bmi,
+                @body_fat,
+                @muscle_mass,
+                COALESCE(@record_date, CAST(GETDATE() AS DATE))
+            );
+            SELECT SCOPE_IDENTITY() AS measurement_id;
+        `);
+
+    return {
+        measurement_id: insertResult.recordset[0].measurement_id,
+        member_id: memberId,
+        weight,
+        bmi,
+        body_fat: bodyFat,
+        muscle_mass: muscleMass,
+        record_date: recordDate || new Date().toISOString().slice(0, 10)
+    };
+}
+
 async function getMemberDashboard(memberId) {
     const pool = getPool();
 
@@ -156,6 +245,8 @@ async function getMemberDashboard(memberId) {
             ORDER BY dp.diet_plan_id DESC
         `);
 
+    const bodyMeasurements = await getBodyMeasurementsForMember(memberId);
+
     return {
         profile,
         subscription: subscriptionResult.recordset[0] || null,
@@ -163,6 +254,7 @@ async function getMemberDashboard(memberId) {
         upcomingSessions: sessionsResult.recordset,
         workoutPlans,
         dietPlans: dietPlansResult.recordset,
+        bodyMeasurements,
         stats: {
             completed_sessions_last_30: completedResult.recordset[0]?.completed_last_30 ?? 0
         }
@@ -271,5 +363,7 @@ async function subscribeMember(memberId, planId, options = {}) {
 
 module.exports = {
     getMemberDashboard,
-    subscribeMember
+    subscribeMember,
+    getBodyMeasurementsForMember,
+    createBodyMeasurement
 };

@@ -1,4 +1,9 @@
-const { getMemberDashboard, subscribeMember } = require('../models/memberPortalModel');
+const {
+    getMemberDashboard,
+    subscribeMember,
+    getBodyMeasurementsForMember,
+    createBodyMeasurement
+} = require('../models/memberPortalModel');
 const { getPlansForBrowse } = require('../models/planModel');
 
 async function getMemberDashboardHandler(req, res) {
@@ -53,8 +58,41 @@ async function subscribeMemberHandler(req, res) {
     }
 }
 
+async function getMemberBodyMeasurementsHandler(req, res) {
+    try {
+        const memberId = parseInt(req.params.memberId, 10);
+        if (Number.isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member id' });
+        }
+
+        const measurements = await getBodyMeasurementsForMember(memberId);
+        res.json(measurements);
+    } catch (err) {
+        console.error('Body measurements fetch error:', err);
+        res.status(500).json({ error: 'Failed to load body measurements' });
+    }
+}
+
+async function createMemberBodyMeasurementHandler(req, res) {
+    try {
+        const memberId = parseInt(req.params.memberId, 10);
+        if (Number.isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member id' });
+        }
+
+        const created = await createBodyMeasurement(memberId, req.body || {});
+        res.status(201).json(created);
+    } catch (err) {
+        console.error('Body measurement create error:', err);
+        const status = err.message && err.message.includes('not found') ? 404 : 400;
+        res.status(status).json({ error: err.message || 'Failed to create measurement' });
+    }
+}
+
 module.exports = {
     getMemberDashboardHandler,
     getMembershipPlansBrowseHandler,
-    subscribeMemberHandler
+    subscribeMemberHandler,
+    getMemberBodyMeasurementsHandler,
+    createMemberBodyMeasurementHandler
 };

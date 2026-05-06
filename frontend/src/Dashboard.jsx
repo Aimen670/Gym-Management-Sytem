@@ -105,6 +105,15 @@ function Dashboard() {
   const [bookingSlot, setBookingSlot] = useState('');
   const [bookingNote, setBookingNote] = useState('');
   const [bookingBusy, setBookingBusy] = useState(false);
+  const [measurementForm, setMeasurementForm] = useState(() => ({
+    weight: '',
+    bmi: '',
+    body_fat: '',
+    muscle_mass: '',
+    record_date: new Date().toISOString().slice(0, 10)
+  }));
+  const [measurementNote, setMeasurementNote] = useState('');
+  const [measurementBusy, setMeasurementBusy] = useState(false);
   const [subscribeBusyId, setSubscribeBusyId] = useState(null);
   const [subscribeNote, setSubscribeNote] = useState('');
   const [planPayMethod, setPlanPayMethod] = useState({});
@@ -303,6 +312,46 @@ function Dashboard() {
     }
   }
 
+  async function handleMeasurementSubmit(e) {
+    e.preventDefault();
+    if (!memberId) return;
+    setMeasurementBusy(true);
+    setMeasurementNote('');
+    try {
+      const payload = {
+        weight: measurementForm.weight,
+        bmi: measurementForm.bmi,
+        body_fat: measurementForm.body_fat,
+        muscle_mass: measurementForm.muscle_mass,
+        record_date: measurementForm.record_date || undefined
+      };
+
+      const res = await fetch(`/api/member/${memberId}/body-measurements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Could not save measurement');
+      }
+      setMeasurementNote('Measurement saved.');
+      setMeasurementForm({
+        weight: '',
+        bmi: '',
+        body_fat: '',
+        muscle_mass: '',
+        record_date: new Date().toISOString().slice(0, 10)
+      });
+      await refreshDashboard();
+    } catch (err) {
+      console.error(err);
+      setMeasurementNote(err.message);
+    } finally {
+      setMeasurementBusy(false);
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('memberProfile');
@@ -315,6 +364,7 @@ function Dashboard() {
   const upcomingSessions = dashboard?.upcomingSessions ?? [];
   const workoutPlans = dashboard?.workoutPlans ?? [];
   const dietPlans = dashboard?.dietPlans ?? [];
+  const bodyMeasurements = dashboard?.bodyMeasurements ?? [];
   const completed30 = dashboard?.stats?.completed_sessions_last_30 ?? 0;
 
   const greeting = useMemo(() => {
@@ -382,6 +432,7 @@ function Dashboard() {
             { id: 'schedule', label: 'Schedule' },
             { id: 'workouts', label: 'Workout plans' },
             { id: 'diet', label: 'Diet plans' },
+            { id: 'measurements', label: 'Body measurements' },
             { id: 'trainers', label: 'Trainers' }
           ].map((item) => (
             <button
@@ -736,6 +787,128 @@ function Dashboard() {
                   ))}
                 </div>
               )}
+            </section>
+          )}
+
+          {activeNav === 'measurements' && (
+            <section className="member-card member-card-pad member-card-wide">
+              <h2>Body measurements</h2>
+              <p className="member-muted">Record weight, BMI, body fat percentage, and muscle mass.</p>
+
+              <form className="member-membership-box" onSubmit={handleMeasurementSubmit}>
+                <div className="member-detail-grid">
+                  <div>
+                    <span className="member-detail-label">Weight (kg)</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={measurementForm.weight}
+                      onChange={(e) => setMeasurementForm({ ...measurementForm, weight: e.target.value })}
+                      min="0"
+                      step="0.1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">BMI</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={measurementForm.bmi}
+                      onChange={(e) => setMeasurementForm({ ...measurementForm, bmi: e.target.value })}
+                      min="0"
+                      step="0.1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Body fat (%)</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={measurementForm.body_fat}
+                      onChange={(e) => setMeasurementForm({ ...measurementForm, body_fat: e.target.value })}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Muscle mass (kg)</span>
+                    <input
+                      type="number"
+                      className="member-input"
+                      value={measurementForm.muscle_mass}
+                      onChange={(e) => setMeasurementForm({ ...measurementForm, muscle_mass: e.target.value })}
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Record date</span>
+                    <input
+                      type="date"
+                      className="member-input"
+                      value={measurementForm.record_date}
+                      onChange={(e) => setMeasurementForm({ ...measurementForm, record_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {measurementNote && (
+                  <p
+                    className={
+                      measurementNote.toLowerCase().includes('could not') ||
+                      measurementNote.toLowerCase().includes('invalid') ||
+                      measurementNote.toLowerCase().includes('failed')
+                        ? 'member-subscribe-msg member-subscribe-msg-err'
+                        : 'member-subscribe-msg member-subscribe-msg-ok'
+                    }
+                    style={{ marginTop: 12 }}
+                  >
+                    {measurementNote}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="member-plan-subscribe-btn"
+                  style={{ marginTop: 12 }}
+                  disabled={measurementBusy}
+                >
+                  {measurementBusy ? 'Saving…' : 'Save measurement'}
+                </button>
+              </form>
+
+              <div className="member-workout-grid" style={{ marginTop: 20 }}>
+                {bodyMeasurements.length === 0 ? (
+                  <p className="member-muted">No measurements saved yet.</p>
+                ) : (
+                  bodyMeasurements.map((row) => (
+                    <article key={row.measurement_id} className="member-workout-card">
+                      <div className="member-workout-head">
+                        <div>
+                          <h3>Measurement #{row.measurement_id}</h3>
+                          <p className="member-muted">Recorded {formatDate(row.record_date)}</p>
+                        </div>
+                      </div>
+                      <div className="member-workout-table">
+                        <div className="member-workout-row member-workout-row-head">
+                          <span>Weight</span>
+                          <span>BMI</span>
+                          <span>Body fat</span>
+                          <span>Muscle mass</span>
+                        </div>
+                        <div className="member-workout-row">
+                          <span>{row.weight ?? '—'} kg</span>
+                          <span>{row.bmi ?? '—'}</span>
+                          <span>{row.body_fat ?? '—'}%</span>
+                          <span>{row.muscle_mass ?? '—'} kg</span>
+                        </div>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
             </section>
           )}
 
