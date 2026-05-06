@@ -20,6 +20,97 @@ function normalizeScheduleDay(value) {
   return day;
 }
 
+async function getExercisesCatalog() {
+  const pool = getPool();
+  const result = await pool.request().query(`
+    SELECT exercise_id, exercise_name, description
+    FROM exercises
+    ORDER BY exercise_name
+  `);
+  return result.recordset;
+}
+
+async function createCatalogExercise(payload) {
+  const name = String(payload.exercise_name || '').trim();
+  const description = payload.description == null ? null : String(payload.description).trim();
+
+  if (!name) {
+    throw new Error('Exercise name is required');
+  }
+
+  const pool = getPool();
+  const result = await pool.request()
+    .input('exercise_name', sql.VarChar(100), name)
+    .input('description', sql.Text, description)
+    .query(`
+      INSERT INTO exercises (exercise_name, description)
+      VALUES (@exercise_name, @description);
+      SELECT SCOPE_IDENTITY() AS exercise_id;
+    `);
+
+  return {
+    exercise_id: result.recordset[0].exercise_id,
+    exercise_name: name,
+    description
+  };
+}
+
+async function updateCatalogExercise(exerciseId, payload) {
+  const name = String(payload.exercise_name || '').trim();
+  const description = payload.description == null ? null : String(payload.description).trim();
+
+  if (!name) {
+    throw new Error('Exercise name is required');
+  }
+
+  const pool = getPool();
+  await pool.request()
+    .input('exercise_id', sql.Int, exerciseId)
+    .input('exercise_name', sql.VarChar(100), name)
+    .input('description', sql.Text, description)
+    .query(`
+      UPDATE exercises
+      SET exercise_name = @exercise_name,
+          description = @description
+      WHERE exercise_id = @exercise_id
+    `);
+
+  const result = await pool.request()
+    .input('exercise_id', sql.Int, exerciseId)
+    .query(`
+      SELECT exercise_id, exercise_name, description
+      FROM exercises
+      WHERE exercise_id = @exercise_id
+    `);
+
+  if (result.recordset.length === 0) {
+    throw new Error('Exercise not found');
+  }
+
+  return result.recordset[0];
+}
+
+async function deleteCatalogExercise(exerciseId) {
+  const pool = getPool();
+  const usage = await pool.request()
+    .input('exercise_id', sql.Int, exerciseId)
+    .query('SELECT COUNT(*) AS total FROM workout_plan_exercises WHERE exercise_id = @exercise_id');
+
+  if (usage.recordset[0].total > 0) {
+    throw new Error('Exercise is used in workout plans');
+  }
+
+  const result = await pool.request()
+    .input('exercise_id', sql.Int, exerciseId)
+    .query('DELETE FROM exercises WHERE exercise_id = @exercise_id');
+
+  if (result.rowsAffected[0] === 0) {
+    throw new Error('Exercise not found');
+  }
+
+  return { success: true };
+}
+
 async function getWorkoutPlansAdmin() {
   const pool = getPool();
   const planResult = await pool.request().query(`
@@ -55,15 +146,16 @@ async function getWorkoutPlansAdmin() {
 
   const exercisesResult = await request.query(`
     SELECT
-      exercise_id,
-      workout_plan_id,
-      exercise_name,
-      sets,
-      reps,
-      schedule_day
-    FROM workout_exercises
+      wpe.plan_exercise_id AS exercise_id,
+      wpe.workout_plan_id,
+      e.exercise_name,
+      wpe.sets,
+      wpe.reps,
+      wpe.schedule_day
+    FROM workout_plan_exercises wpe
+    JOIN exercises e ON wpe.exercise_id = e.exercise_id
     WHERE workout_plan_id IN (${idParams.join(', ')})
-    ORDER BY workout_plan_id, schedule_day, exercise_name
+    ORDER BY wpe.workout_plan_id, wpe.schedule_day, e.exercise_name
   `);
 
   exercisesResult.recordset.forEach((row) => {
@@ -80,21 +172,22 @@ async function getWorkoutExercisesAdmin() {
   const pool = getPool();
   const result = await pool.request().query(`
     SELECT
-      we.exercise_id,
-      we.workout_plan_id,
+      wpe.plan_exercise_id AS exercise_id,
+      wpe.workout_plan_id,
       wp.member_id,
       m.full_name AS member_name,
       wp.trainer_id,
       t.name AS trainer_name,
-      we.exercise_name,
-      we.sets,
-      we.reps,
-      we.schedule_day
-    FROM workout_exercises we
-    JOIN workout_plans wp ON we.workout_plan_id = wp.workout_plan_id
+      e.exercise_name,
+      wpe.sets,
+      wpe.reps,
+      wpe.schedule_day
+    FROM workout_plan_exercises wpe
+    JOIN workout_plans wp ON wpe.workout_plan_id = wp.workout_plan_id
+    JOIN exercises e ON wpe.exercise_id = e.exercise_id
     LEFT JOIN members m ON wp.member_id = m.member_id
     LEFT JOIN trainers t ON wp.trainer_id = t.trainer_id
-    ORDER BY we.exercise_id DESC
+    ORDER BY wpe.plan_exercise_id DESC
   `);
   return result.recordset;
 }
@@ -128,15 +221,36 @@ async function createWorkoutExercise(payload) {
     throw new Error('Workout plan not found');
   }
 
+  const exerciseResult = await pool.request()
+    .input('exercise_name', sql.VarChar(100), name)
+    .query(`
+      SELECT exercise_id
+      FROM exercises
+      WHERE LOWER(exercise_name) = LOWER(@exercise_name)
+    `);
+
+  let exerciseId = exerciseResult.recordset[0]?.exercise_id;
+
+  if (!exerciseId) {
+    const insertExercise = await pool.request()
+      .input('exercise_name', sql.VarChar(100), name)
+      .query(`
+        INSERT INTO exercises (exercise_name)
+        VALUES (@exercise_name);
+        SELECT SCOPE_IDENTITY() AS exercise_id;
+      `);
+    exerciseId = insertExercise.recordset[0].exercise_id;
+  }
+
   const insertResult = await pool.request()
     .input('workout_plan_id', sql.Int, workoutPlanId)
-    .input('exercise_name', sql.VarChar(100), name)
+    .input('exercise_id', sql.Int, exerciseId)
     .input('sets', sql.Int, sets)
     .input('reps', sql.Int, reps)
     .input('schedule_day', sql.VarChar(20), scheduleDay)
     .query(`
-      INSERT INTO workout_exercises (workout_plan_id, exercise_name, sets, reps, schedule_day)
-      VALUES (@workout_plan_id, @exercise_name, @sets, @reps, @schedule_day);
+      INSERT INTO workout_plan_exercises (workout_plan_id, exercise_id, sets, reps, schedule_day)
+      VALUES (@workout_plan_id, @exercise_id, @sets, @reps, @schedule_day);
       SELECT SCOPE_IDENTITY() AS exercise_id;
     `);
 
@@ -179,29 +293,57 @@ async function updateWorkoutExercise(exerciseId, payload) {
     throw new Error('Workout plan not found');
   }
 
-  await pool.request()
-    .input('exercise_id', sql.Int, exerciseId)
-    .input('workout_plan_id', sql.Int, workoutPlanId)
+  const exerciseResult = await pool.request()
     .input('exercise_name', sql.VarChar(100), name)
+    .query(`
+      SELECT exercise_id
+      FROM exercises
+      WHERE LOWER(exercise_name) = LOWER(@exercise_name)
+    `);
+
+  let catalogExerciseId = exerciseResult.recordset[0]?.exercise_id;
+
+  if (!catalogExerciseId) {
+    const insertExercise = await pool.request()
+      .input('exercise_name', sql.VarChar(100), name)
+      .query(`
+        INSERT INTO exercises (exercise_name)
+        VALUES (@exercise_name);
+        SELECT SCOPE_IDENTITY() AS exercise_id;
+      `);
+    catalogExerciseId = insertExercise.recordset[0].exercise_id;
+  }
+
+  await pool.request()
+    .input('plan_exercise_id', sql.Int, exerciseId)
+    .input('workout_plan_id', sql.Int, workoutPlanId)
+    .input('exercise_id', sql.Int, catalogExerciseId)
     .input('sets', sql.Int, sets)
     .input('reps', sql.Int, reps)
     .input('schedule_day', sql.VarChar(20), scheduleDay)
     .query(`
-      UPDATE workout_exercises
+      UPDATE workout_plan_exercises
       SET workout_plan_id = @workout_plan_id,
-          exercise_name = @exercise_name,
+          exercise_id = @exercise_id,
           sets = @sets,
           reps = @reps,
           schedule_day = @schedule_day
-      WHERE exercise_id = @exercise_id
+      WHERE plan_exercise_id = @plan_exercise_id
     `);
 
   const result = await pool.request()
-    .input('exercise_id', sql.Int, exerciseId)
+    .input('plan_exercise_id', sql.Int, exerciseId)
     .query(`
-      SELECT exercise_id, workout_plan_id, exercise_name, sets, reps, schedule_day
-      FROM workout_exercises
-      WHERE exercise_id = @exercise_id
+      SELECT
+        wpe.plan_exercise_id AS exercise_id,
+        wpe.workout_plan_id,
+        e.exercise_name,
+        wpe.sets,
+        wpe.reps,
+        wpe.schedule_day
+      FROM workout_plan_exercises wpe
+      JOIN exercises e ON wpe.exercise_id = e.exercise_id
+      WHERE wpe.plan_exercise_id = @plan_exercise_id
     `);
 
   if (result.recordset.length === 0) {
@@ -214,8 +356,8 @@ async function updateWorkoutExercise(exerciseId, payload) {
 async function deleteWorkoutExercise(exerciseId) {
   const pool = getPool();
   const result = await pool.request()
-    .input('exercise_id', sql.Int, exerciseId)
-    .query('DELETE FROM workout_exercises WHERE exercise_id = @exercise_id');
+    .input('plan_exercise_id', sql.Int, exerciseId)
+    .query('DELETE FROM workout_plan_exercises WHERE plan_exercise_id = @plan_exercise_id');
 
   if (result.rowsAffected[0] === 0) {
     throw new Error('Exercise not found');
@@ -225,7 +367,7 @@ async function deleteWorkoutExercise(exerciseId) {
 }
 
 async function createWorkoutPlan(payload) {
-  const { member_id, trainer_id, exercises, exercise_ids } = payload || {};
+  const { member_id, trainer_id, exercises } = payload || {};
 
   const memberId = parseInt(member_id, 10);
   if (Number.isNaN(memberId)) {
@@ -238,27 +380,16 @@ async function createWorkoutPlan(payload) {
   }
 
   let normalizedExercises = [];
-  let exerciseIds = [];
 
-  if (Array.isArray(exercise_ids)) {
-    exerciseIds = Array.from(
-      new Set(
-        exercise_ids
-          .map((id) => parseInt(id, 10))
-          .filter((id) => !Number.isNaN(id) && id > 0)
-      )
-    );
-  }
-
-  if (exerciseIds.length === 0 && Array.isArray(exercises)) {
+  if (Array.isArray(exercises)) {
     normalizedExercises = exercises.map((exercise) => {
-      const name = String(exercise.exercise_name || '').trim();
+      const exerciseId = parseInt(exercise.exercise_id, 10);
       const sets = parseInt(exercise.sets, 10);
       const reps = parseInt(exercise.reps, 10);
       const scheduleDay = normalizeScheduleDay(exercise.schedule_day);
 
-      if (!name) {
-        throw new Error('Exercise name is required');
+      if (Number.isNaN(exerciseId) || exerciseId <= 0) {
+        throw new Error('exercise_id is required');
       }
       if (Number.isNaN(sets) || sets <= 0) {
         throw new Error('Sets must be a positive number');
@@ -268,7 +399,7 @@ async function createWorkoutPlan(payload) {
       }
 
       return {
-        exercise_name: name,
+        exercise_id: exerciseId,
         sets,
         reps,
         schedule_day: scheduleDay
@@ -276,7 +407,7 @@ async function createWorkoutPlan(payload) {
     });
   }
 
-  if (exerciseIds.length === 0 && normalizedExercises.length === 0) {
+  if (normalizedExercises.length === 0) {
     throw new Error('At least one exercise is required');
   }
 
@@ -297,42 +428,37 @@ async function createWorkoutPlan(payload) {
     const planRow = insertPlan.recordset[0];
     const planId = planRow.workout_plan_id;
 
-    if (exerciseIds.length > 0) {
-      const request = new sql.Request(transaction);
-      const idParams = exerciseIds.map((id, idx) => {
-        const key = `exercise_id_${idx}`;
-        request.input(key, sql.Int, id);
-        return `@${key}`;
-      });
+    const uniqueExerciseIds = Array.from(
+      new Set(normalizedExercises.map((exercise) => exercise.exercise_id))
+    );
 
-      const existingResult = await request.query(`
-        SELECT exercise_name, sets, reps, schedule_day
-        FROM workout_exercises
-        WHERE exercise_id IN (${idParams.join(', ')})
-      `);
+    const verifyRequest = new sql.Request(transaction);
+    const verifyParams = uniqueExerciseIds.map((id, idx) => {
+      const key = `exercise_id_${idx}`;
+      verifyRequest.input(key, sql.Int, id);
+      return `@${key}`;
+    });
 
-      if (existingResult.recordset.length === 0) {
-        throw new Error('No exercises found for selection');
-      }
+    const verifyResult = await verifyRequest.query(`
+      SELECT exercise_id
+      FROM exercises
+      WHERE exercise_id IN (${verifyParams.join(', ')})
+    `);
 
-      normalizedExercises = existingResult.recordset.map((row) => ({
-        exercise_name: row.exercise_name,
-        sets: row.sets,
-        reps: row.reps,
-        schedule_day: normalizeScheduleDay(row.schedule_day)
-      }));
+    if (verifyResult.recordset.length !== uniqueExerciseIds.length) {
+      throw new Error('One or more exercises not found');
     }
 
     for (const exercise of normalizedExercises) {
       await new sql.Request(transaction)
         .input('workout_plan_id', sql.Int, planId)
-        .input('exercise_name', sql.VarChar(100), exercise.exercise_name)
+        .input('exercise_id', sql.Int, exercise.exercise_id)
         .input('sets', sql.Int, exercise.sets)
         .input('reps', sql.Int, exercise.reps)
         .input('schedule_day', sql.VarChar(20), exercise.schedule_day)
         .query(`
-          INSERT INTO workout_exercises (workout_plan_id, exercise_name, sets, reps, schedule_day)
-          VALUES (@workout_plan_id, @exercise_name, @sets, @reps, @schedule_day)
+          INSERT INTO workout_plan_exercises (workout_plan_id, exercise_id, sets, reps, schedule_day)
+          VALUES (@workout_plan_id, @exercise_id, @sets, @reps, @schedule_day)
         `);
     }
 
@@ -352,6 +478,10 @@ async function createWorkoutPlan(payload) {
 }
 
 module.exports = {
+  getExercisesCatalog,
+  createCatalogExercise,
+  updateCatalogExercise,
+  deleteCatalogExercise,
   getWorkoutPlansAdmin,
   getWorkoutExercisesAdmin,
   createWorkoutPlan,

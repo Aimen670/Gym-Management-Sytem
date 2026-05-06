@@ -672,15 +672,21 @@
 
 .admin-workout-exercise-option {
   display: grid;
-  grid-template-columns: auto 1.4fr 0.6fr 0.6fr 0.8fr;
+  grid-template-columns: auto 1fr;
   gap: 10px;
-  align-items: center;
+  align-items: start;
   padding: 10px 12px;
   border: 1px solid #333333;
   border-radius: 10px;
   background: #0f0f0f;
   font-size: 12px;
   color: #b9eae5;
+}
+
+.admin-workout-exercise-option label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .admin-workout-exercise-option input {
@@ -691,6 +697,32 @@
 .admin-workout-exercise-name {
   font-weight: 600;
   color: #ffffff;
+}
+
+.admin-workout-exercise-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.admin-exercise-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-exercise-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7fe5dc;
+}
+
+.admin-workout-exercise-fields .admin-form-input {
+  color: #ffffff;
+  width: 100%;
+  min-width: 220px;
 }
 
 .admin-workout-exercise-row {

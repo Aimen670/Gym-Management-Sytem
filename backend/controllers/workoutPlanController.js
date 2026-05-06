@@ -1,4 +1,8 @@
 const {
+  getExercisesCatalog,
+  createCatalogExercise,
+  updateCatalogExercise,
+  deleteCatalogExercise,
   getWorkoutPlansAdmin,
   getWorkoutExercisesAdmin,
   createWorkoutPlan,
@@ -6,6 +10,58 @@ const {
   updateWorkoutExercise,
   deleteWorkoutExercise
 } = require('../models/workoutPlanModel');
+
+async function getExercisesCatalogHandler(req, res) {
+  try {
+    const exercises = await getExercisesCatalog();
+    res.json(exercises);
+  } catch (err) {
+    console.error('Exercise catalog fetch error:', err);
+    res.status(500).json({ error: 'Failed to load exercises' });
+  }
+}
+
+async function createCatalogExerciseHandler(req, res) {
+  try {
+    const created = await createCatalogExercise(req.body);
+    res.status(201).json(created);
+  } catch (err) {
+    console.error('Exercise catalog create error:', err);
+    res.status(400).json({ error: err.message || 'Failed to create exercise' });
+  }
+}
+
+async function updateCatalogExerciseHandler(req, res) {
+  try {
+    const exerciseId = parseInt(req.params.id, 10);
+    if (Number.isNaN(exerciseId)) {
+      return res.status(400).json({ error: 'Invalid exercise id' });
+    }
+
+    const updated = await updateCatalogExercise(exerciseId, req.body);
+    res.json(updated);
+  } catch (err) {
+    console.error('Exercise catalog update error:', err);
+    const statusCode = err.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to update exercise' });
+  }
+}
+
+async function deleteCatalogExerciseHandler(req, res) {
+  try {
+    const exerciseId = parseInt(req.params.id, 10);
+    if (Number.isNaN(exerciseId)) {
+      return res.status(400).json({ error: 'Invalid exercise id' });
+    }
+
+    await deleteCatalogExercise(exerciseId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Exercise catalog delete error:', err);
+    const statusCode = err.message.includes('used') ? 409 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to delete exercise' });
+  }
+}
 
 async function getWorkoutPlansAdminHandler(req, res) {
   try {
@@ -81,6 +137,10 @@ async function deleteWorkoutExerciseHandler(req, res) {
 }
 
 module.exports = {
+  getExercisesCatalogHandler,
+  createCatalogExerciseHandler,
+  updateCatalogExerciseHandler,
+  deleteCatalogExerciseHandler,
   getWorkoutPlansAdminHandler,
   createWorkoutPlanHandler,
   getWorkoutExercisesAdminHandler,

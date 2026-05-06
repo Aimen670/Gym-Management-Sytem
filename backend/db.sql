@@ -88,6 +88,7 @@ BEGIN
         ON dbo.trainer_availability (trainer_id, available_date);
 END
 
+
 CREATE TABLE workout_plans (
     workout_plan_id INT PRIMARY KEY IDENTITY(1,1),
     member_id INT,
@@ -97,14 +98,22 @@ CREATE TABLE workout_plans (
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE SET NULL
 );
 
-CREATE TABLE workout_exercises (
+CREATE TABLE exercises (
     exercise_id INT PRIMARY KEY IDENTITY(1,1),
-    workout_plan_id INT,
-    exercise_name VARCHAR(100),
-    sets INT CHECK (sets > 0),
-    reps INT CHECK (reps > 0),
+    exercise_name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT
+);
+
+CREATE TABLE workout_plan_exercises (
+    plan_exercise_id INT PRIMARY KEY IDENTITY(1,1),
+    workout_plan_id INT NOT NULL,
+    exercise_id INT NOT NULL,
+    sets INT NOT NULL CHECK (sets > 0),
+    reps INT NOT NULL CHECK (reps > 0),
     schedule_day VARCHAR(20) CHECK (schedule_day IN ('monday','tuesday','wednesday','thursday','friday','saturday','sunday')),
-    FOREIGN KEY (workout_plan_id) REFERENCES workout_plans(workout_plan_id) ON DELETE CASCADE
+    UNIQUE (workout_plan_id, exercise_id, schedule_day),
+    FOREIGN KEY (workout_plan_id) REFERENCES workout_plans(workout_plan_id) ON DELETE CASCADE,
+    FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id) ON DELETE CASCADE
 );
 
 CREATE TABLE workout_logs (
@@ -117,7 +126,7 @@ CREATE TABLE workout_logs (
     log_date DATE DEFAULT GETDATE(),
     FOREIGN KEY (member_id) REFERENCES members(member_id),
     FOREIGN KEY (workout_plan_id) REFERENCES workout_plans(workout_plan_id),
-    FOREIGN KEY (exercise_id) REFERENCES workout_exercises(exercise_id)
+    FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id)
 );
 
 CREATE TABLE diet_plans (
@@ -247,16 +256,27 @@ INSERT INTO workout_plans (member_id, trainer_id, created_date) VALUES
 (2, 2, '2025-03-12'),
 (3, 3, '2025-03-18');
 
-INSERT INTO workout_exercises (workout_plan_id, exercise_name, sets, reps, schedule_day) VALUES
-(1, 'Bench Press', 4, 8, 'monday'),
-(1, 'Incline Dumbbell Press', 3, 10, 'monday'),
-(1, 'Lat Pulldown', 4, 10, 'wednesday'),
-(1, 'Seated Row', 3, 12, 'wednesday'),
-(2, 'Squats', 4, 8, 'tuesday'),
-(2, 'Leg Press', 3, 12, 'tuesday'),
-(2, 'Hamstring Curl', 3, 12, 'thursday'),
-(3, 'Deadlift', 4, 6, 'friday'),
-(3, 'Overhead Press', 3, 8, 'friday');
+INSERT INTO exercises (exercise_name) VALUES
+('Bench Press'),
+('Incline Dumbbell Press'),
+('Lat Pulldown'),
+('Seated Row'),
+('Squats'),
+('Leg Press'),
+('Hamstring Curl'),
+('Deadlift'),
+('Overhead Press');
+
+INSERT INTO workout_plan_exercises (workout_plan_id, exercise_id, sets, reps, schedule_day) VALUES
+(1, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Bench Press'), 4, 8, 'monday'),
+(1, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Incline Dumbbell Press'), 3, 10, 'monday'),
+(1, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Lat Pulldown'), 4, 10, 'wednesday'),
+(1, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Seated Row'), 3, 12, 'wednesday'),
+(2, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Squats'), 4, 8, 'tuesday'),
+(2, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Leg Press'), 3, 12, 'tuesday'),
+(2, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Hamstring Curl'), 3, 12, 'thursday'),
+(3, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Deadlift'), 4, 6, 'friday'),
+(3, (SELECT exercise_id FROM exercises WHERE exercise_name = 'Overhead Press'), 3, 8, 'friday');
 
 -- Diet Plans Data
 INSERT INTO diet_plans (member_id, trainer_id, calorie_target, meal_schedule) VALUES

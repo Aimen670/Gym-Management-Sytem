@@ -36,15 +36,16 @@ async function getWorkoutPlansForMember(memberId) {
 
     const exercisesResult = await request.query(`
         SELECT
-            exercise_id,
-            workout_plan_id,
-            exercise_name,
-            sets,
-            reps,
-            schedule_day
-        FROM workout_exercises
+            wpe.plan_exercise_id AS exercise_id,
+            wpe.workout_plan_id,
+            e.exercise_name,
+            wpe.sets,
+            wpe.reps,
+            wpe.schedule_day
+        FROM workout_plan_exercises wpe
+        JOIN exercises e ON wpe.exercise_id = e.exercise_id
         WHERE workout_plan_id IN (${idParams.join(', ')})
-        ORDER BY workout_plan_id, schedule_day, exercise_name
+        ORDER BY wpe.workout_plan_id, wpe.schedule_day, e.exercise_name
     `);
 
     exercisesResult.recordset.forEach((row) => {
