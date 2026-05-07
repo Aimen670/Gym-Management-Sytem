@@ -419,18 +419,7 @@ function convertTo24Hour(time) {
     return `${hhmmssMatch[1]}:${hhmmssMatch[2]}:${hhmmssMatch[3]}`;
   }
 
-  // Handle AM/PM format
-  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(trimmed);
-  if (!match) return null;
-
-  let hour = parseInt(match[1], 10);
-  const minute = match[2];
-  const period = match[3].toUpperCase();
-
-  if (period === 'PM' && hour !== 12) hour += 12;
-  if (period === 'AM' && hour === 12) hour = 0;
-
-  return `${hour.toString().padStart(2, '0')}:${minute}:00`;
+  return null;
 }
  const handleClassSubmit = async (e) => {
   e.preventDefault();
@@ -440,7 +429,7 @@ function convertTo24Hour(time) {
   try {
     const normalizedTime = convertTo24Hour(classForm.schedule_time);
     if (!normalizedTime) {
-      setError('Schedule time is required and must be in HH:MM or HH:MM:SS format');
+      setError('Schedule time is required and must be in 24-hour HH:MM or HH:MM:SS format');
       setLoading(false);
       return;
     }

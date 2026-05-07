@@ -45,14 +45,12 @@ function formatTime(value) {
   if (value == null) return '';
   if (typeof value === 'string' && /^\d{1,2}:\d{2}/.test(value)) {
     const [h, m] = value.split(':');
-    const hour = parseInt(h, 10);
-    const am = hour >= 12 ? 'PM' : 'AM';
-    const h12 = hour % 12 || 12;
-    return `${h12}:${m.slice(0, 2)} ${am}`;
+    const hour = String(parseInt(h, 10)).padStart(2, '0');
+    return `${hour}:${m.slice(0, 2)}`;
   }
   const d = new Date(value);
   if (!Number.isNaN(d.getTime())) {
-    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
   }
   return String(value);
 }

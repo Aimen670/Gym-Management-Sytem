@@ -49,7 +49,7 @@ function validateClassPayload(payload, requireSchedule = true) {
 
     const parsedTime = schedule_time !== undefined && schedule_time !== null ? parseTime(schedule_time) : null;
     if (parsedTime == null) {
-        throw new Error('Schedule time is required and must be in HH:MM or HH:MM:SS format');
+        throw new Error('Schedule time is required and must be in 24-hour HH:MM or HH:MM:SS format');
     }
 
     const capacityValue = parsePositiveInteger(capacity);
