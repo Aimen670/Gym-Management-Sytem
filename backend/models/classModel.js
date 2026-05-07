@@ -165,12 +165,12 @@ async function createClass(payload) {
         request.input('class_name', sql.VarChar(100), class_name);
         request.input('trainer_id', sql.Int, trainer_id || null);
         request.input('schedule_date', sql.Date, schedule_date || null);
-        request.input('schedule_time', sql.Time, schedule_time || null);
+        request.input('schedule_time', sql.VarChar(8), schedule_time || null);
         request.input('capacity', sql.Int, capacity);
 
         const insertResult = await request.query(`
             INSERT INTO classes (class_name, trainer_id, schedule_date, schedule_time, capacity)
-            VALUES (@class_name, @trainer_id, @schedule_date, @schedule_time, @capacity);
+            VALUES (@class_name, @trainer_id, @schedule_date, CAST(@schedule_time AS TIME), @capacity);
             SELECT SCOPE_IDENTITY() as class_id;
         `);
 
@@ -224,7 +224,7 @@ async function updateClass(classId, payload) {
         request.input('class_name', sql.VarChar(100), class_name);
         request.input('trainer_id', sql.Int, trainer_id || null);
         request.input('schedule_date', sql.Date, schedule_date || null);
-        request.input('schedule_time', sql.Time, schedule_time || null);
+        request.input('schedule_time', sql.VarChar(8), schedule_time || null);
         request.input('capacity', sql.Int, capacity);
 
         const updateResult = await request.query(`
@@ -232,7 +232,7 @@ async function updateClass(classId, payload) {
             SET class_name = @class_name,
                 trainer_id = @trainer_id,
                 schedule_date = @schedule_date,
-                schedule_time = @schedule_time,
+                schedule_time = CAST(@schedule_time AS TIME),
                 capacity = @capacity
             WHERE class_id = @class_id
         `);

@@ -284,4 +284,33 @@ INSERT INTO diet_plans (member_id, trainer_id, calorie_target, meal_schedule) VA
 (2, 2, 2200, 'Breakfast: yogurt + fruit; Lunch: salad + chicken; Dinner: stir-fry + veggies'),
 (3, 3, 2500, 'Breakfast: smoothie + toast; Lunch: tuna wrap; Dinner: turkey + sweet potato');
 
+-- Classes Data (Group Fitness Classes)
+INSERT INTO classes (class_name, trainer_id, schedule_date, schedule_time, capacity) VALUES
+('Morning Yoga', 2, '2025-06-01', '07:00:00', 20),
+('HIIT Training', 3, '2025-06-01', '09:00:00', 15),
+('Strength Training', 1, '2025-06-01', '18:00:00', 12),
+('Evening Pilates', 4, '2025-06-02', '17:00:00', 18),
+('Cardio Blast', 3, '2025-06-02', '08:00:00', 25),
+('Power Yoga', 2, '2025-06-03', '07:30:00', 20),
+('Boot Camp', 1, '2025-06-03', '19:00:00', 15);
+
+-- Class Plans Data (Link classes to membership plans)
+INSERT INTO class_plans (class_id, plan_id) VALUES
+-- Quarterly and Yearly plans include group classes
+(1, 2), (1, 3), -- Morning Yoga
+(2, 2), (2, 3), -- HIIT Training
+(3, 2), (3, 3), -- Strength Training
+(4, 2), (4, 3), -- Evening Pilates
+(5, 2), (5, 3), -- Cardio Blast
+(6, 2), (6, 3), -- Power Yoga
+(7, 2), (7, 3); -- Boot Camp
+
+-- Sample Class Enrollments
+INSERT INTO class_enrollments (class_id, member_id) VALUES
+(1, 2), (1, 4), -- Ali Khan and Ayesha Malik in Morning Yoga
+(2, 1), (2, 5), -- Ahmed Raza and Hassan Ali in HIIT Training
+(3, 3), -- Fatima Noor in Strength Training
+(4, 2), (4, 3), -- Ahmed Raza and Fatima Noor in Evening Pilates
+(5, 1), (5, 4), (5, 5); -- Ali Khan, Ayesha Malik, and Hassan Ali in Cardio Blast
+
 

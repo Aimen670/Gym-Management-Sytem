@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import ClassCard from './components/ClassCard';
+import Toast from './components/Toast';
 
 function memberIdFromToken(token) {
   if (!token || typeof token !== 'string') return null;
@@ -121,11 +123,24 @@ function Dashboard() {
   }));
   const [workoutLogNote, setWorkoutLogNote] = useState('');
   const [workoutLogBusy, setWorkoutLogBusy] = useState(false);
+  const [fitnessGoals, setFitnessGoals] = useState([]);
+  const [fitnessGoalForm, setFitnessGoalForm] = useState(() => ({
+    goal_type: '',
+    target_value: '',
+    start_date: new Date().toISOString().slice(0, 10),
+    target_date: ''
+  }));
+  const [fitnessGoalBusy, setFitnessGoalBusy] = useState(false);
+  const [fitnessGoalNote, setFitnessGoalNote] = useState('');
+  const [classes, setClasses] = useState([]);
+  const [classEnrollments, setClassEnrollments] = useState({});
+  const [enrollmentBusy, setEnrollmentBusy] = useState(false);
   const [subscribeBusyId, setSubscribeBusyId] = useState(null);
   const [subscribeNote, setSubscribeNote] = useState('');
   const [planPayMethod, setPlanPayMethod] = useState({});
   const [planStartDate, setPlanStartDate] = useState({});
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
   const [cachedProfile] = useState(readStoredMemberProfile);
 
   const memberId = useMemo(() => memberIdFromToken(localStorage.getItem('token')), []);
@@ -139,10 +154,11 @@ function Dashboard() {
     const load = async () => {
       setError('');
       try {
-        const [dashRes, trainersRes, plansRes] = await Promise.all([
+        const [dashRes, trainersRes, plansRes, classesRes] = await Promise.all([
           fetch(`/api/member/${memberId}/dashboard`),
           fetch('/api/trainers'),
-          fetch('/api/membership-plans')
+          fetch('/api/membership-plans'),
+          fetch('/api/classes')
         ]);
 
         const dashData = await readJsonBody(dashRes);
@@ -162,6 +178,18 @@ function Dashboard() {
         const plansData = await readJsonBody(plansRes);
         if (plansRes.ok && Array.isArray(plansData)) {
           setMembershipPlans(plansData);
+        }
+
+        const classesData = await readJsonBody(classesRes);
+        if (classesRes.ok && Array.isArray(classesData)) {
+          setClasses(classesData);
+        }
+
+        // Load fitness goals
+        const fitnessGoalsRes = await fetch(`/api/fitness-goals/member/${memberId}`);
+        const fitnessGoalsData = await readJsonBody(fitnessGoalsRes);
+        if (fitnessGoalsRes.ok && Array.isArray(fitnessGoalsData)) {
+          setFitnessGoals(fitnessGoalsData);
         }
       } catch (err) {
         console.error(err);
@@ -207,6 +235,13 @@ function Dashboard() {
       cancelled = true;
     };
   }, [bookingDate]);
+
+  useEffect(() => {
+    // Load enrollments for all classes
+    classes.forEach(async (classItem) => {
+      await loadClassEnrollments(classItem.class_id);
+    });
+  }, [classes]);
 
   async function refreshDashboard() {
     if (!memberId) return;
@@ -397,11 +432,440 @@ function Dashboard() {
     }
   }
 
+  const showDetailedProgress = (progress, goal) => {
+    let progressMessage = `📊 **Progress Report for ${goal.goal_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}**\n\n`;
+    
+    // Add measurement comparison if available
+    if (progress.measurementComparison) {
+      const comp = progress.measurementComparison;
+      switch (comp.type) {
+        case 'weight_loss':
+          progressMessage += `📉 **Weight Loss Progress:**\n`;
+          progressMessage += `• Starting Weight: ${comp.startWeight} kg\n`;
+          progressMessage += `• Current Weight: ${comp.currentWeight} kg\n`;
+          progressMessage += `• Target Weight: ${comp.targetWeight} kg\n`;
+          progressMessage += `• Weight Lost: ${comp.weightLoss.toFixed(1)} kg\n`;
+          progressMessage += `• Progress: ${Math.round(comp.progressPercentage)}%\n\n`;
+          break;
+          
+        case 'muscle_gain':
+          progressMessage += `💪 **Muscle Gain Progress:**\n`;
+          progressMessage += `• Starting Muscle Mass: ${comp.startMuscle} kg\n`;
+          progressMessage += `• Current Muscle Mass: ${comp.currentMuscle} kg\n`;
+          progressMessage += `• Target Muscle Mass: ${comp.targetMuscle} kg\n`;
+          progressMessage += `• Muscle Gained: ${comp.muscleGain.toFixed(1)} kg\n`;
+          progressMessage += `• Progress: ${Math.round(comp.progressPercentage)}%\n\n`;
+          break;
+          
+        case 'strength_training':
+          progressMessage += `🏋️ **Strength Training Progress:**\n`;
+          progressMessage += `• Average Weight Increase: ${comp.avgWeightIncrease.toFixed(1)} kg\n`;
+          progressMessage += `• Total Strength Workouts: ${comp.totalWorkouts}\n`;
+          progressMessage += `• Progress: ${Math.round(comp.progressPercentage)}%\n\n`;
+          break;
+          
+        case 'endurance_improvement':
+          progressMessage += `🏃 **Endurance Progress:**\n`;
+          progressMessage += `• Average Reps Increase: ${comp.avgRepsIncrease}\n`;
+          progressMessage += `• Total Endurance Workouts: ${comp.totalWorkouts}\n`;
+          progressMessage += `• Progress: ${Math.round(comp.progressPercentage)}%\n\n`;
+          break;
+          
+        case 'general_fitness':
+          progressMessage += `🌟 **General Fitness Progress:**\n`;
+          progressMessage += `• Total Workouts: ${comp.totalWorkouts}\n`;
+          progressMessage += `• Workout Frequency: ${(comp.workoutFrequency * 7).toFixed(1)} workouts/week\n`;
+          progressMessage += `• Days Active: ${comp.daysSinceStart}\n`;
+          progressMessage += `• Progress: ${Math.round(comp.progressPercentage)}%\n\n`;
+          break;
+      }
+    }
+    
+    // Add time-based progress
+    if (progress.progressDetails) {
+      const details = progress.progressDetails;
+      progressMessage += `⏰ **Time Progress:**\n`;
+      progressMessage += `• Days Elapsed: ${details.daysElapsed}\n`;
+      progressMessage += `• Days Remaining: ${details.daysRemaining}\n`;
+      progressMessage += `• Time Progress: ${Math.round(details.timeProgress)}%\n`;
+      progressMessage += `• Status: ${details.isOnTrack ? '✅ On Track' : '⚠️ Behind Schedule'}\n\n`;
+    }
+    
+    // Add recommendations
+    if (progress.recommendations && progress.recommendations.length > 0) {
+      progressMessage += `💡 **Recommendations:**\n`;
+      progress.recommendations.forEach((rec, index) => {
+        progressMessage += `${index + 1}. ${rec}\n`;
+      });
+    }
+    
+    // Show as a detailed toast message that stays open until manually closed
+    showToast(progressMessage, 'info', 0);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('memberProfile');
-    navigate('/', { replace: true });
+    navigate('/login', { replace: true });
   };
+
+  const showToast = (message, type = 'success', duration = 3000) => {
+    setToast({ message, type, duration, id: Date.now() });
+  };
+
+  const hideToast = () => {
+    setToast(null);
+  };
+
+  const loadClassEnrollments = async (classId) => {
+    try {
+      const res = await fetch(`/api/classes/${classId}/enrollments`);
+      const data = await readJsonBody(res);
+      if (res.ok) {
+        setClassEnrollments(prev => ({ ...prev, [classId]: data }));
+      }
+    } catch (err) {
+      console.error('Failed to load class enrollments:', err);
+    }
+  };
+
+  const handleEnrollInClass = async (classId) => {
+    if (!memberId) return;
+    
+    setEnrollmentBusy(true);
+    try {
+      const res = await fetch(`/api/classes/${classId}/enroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId })
+      });
+      
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to enroll in class');
+      }
+      
+      // Refresh class enrollments
+      await loadClassEnrollments(classId);
+      
+      // Refresh dashboard to update overview with new enrollment
+      await refreshDashboard();
+      
+      // Show success message
+      setError('');
+      showToast('Successfully enrolled in class!', 'success');
+    } catch (err) {
+      console.error('Enrollment error:', err);
+      setError(err.message);
+    } finally {
+      setEnrollmentBusy(false);
+    }
+  };
+
+  const handleUnenrollFromClass = async (enrollmentId) => {
+    setEnrollmentBusy(true);
+    try {
+      const res = await fetch(`/api/enrollments/${enrollmentId}`, {
+        method: 'DELETE'
+      });
+      
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to unenroll from class');
+      }
+      
+      // Refresh all class enrollments
+      for (const classId of Object.keys(classEnrollments)) {
+        await loadClassEnrollments(parseInt(classId));
+      }
+      
+      // Refresh dashboard to update overview after unenrollment
+      await refreshDashboard();
+      
+      // Show success message
+      setError('');
+      showToast('Successfully unenrolled from class!', 'success');
+    } catch (err) {
+      console.error('Unenrollment error:', err);
+      setError(err.message);
+    } finally {
+      setEnrollmentBusy(false);
+    }
+  };
+
+  async function handleFitnessGoalSubmit(e) {
+    e.preventDefault();
+    if (!memberId) return;
+    setFitnessGoalBusy(true);
+    setFitnessGoalNote('');
+    try {
+      const payload = {
+        member_id: memberId,
+        goal_type: fitnessGoalForm.goal_type,
+        target_value: fitnessGoalForm.target_value,
+        start_date: fitnessGoalForm.start_date || undefined,
+        target_date: fitnessGoalForm.target_date || undefined
+      };
+
+      const res = await fetch('/api/fitness-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Could not save fitness goal');
+      }
+      setFitnessGoalNote('Fitness goal created successfully.');
+      setFitnessGoalForm({
+        goal_type: '',
+        target_value: '',
+        start_date: new Date().toISOString().slice(0, 10),
+        target_date: ''
+      });
+      
+      // Refresh fitness goals
+      const fitnessGoalsRes = await fetch(`/api/fitness-goals/member/${memberId}`);
+      const fitnessGoalsData = await readJsonBody(fitnessGoalsRes);
+      if (fitnessGoalsRes.ok && Array.isArray(fitnessGoalsData)) {
+        setFitnessGoals(fitnessGoalsData);
+      }
+    } catch (err) {
+      console.error(err);
+      setFitnessGoalNote(err.message);
+    } finally {
+      setFitnessGoalBusy(false);
+    }
+  }
+
+  async function handleDeleteFitnessGoal(goalId) {
+    if (!memberId || !goalId) return;
+    setFitnessGoalBusy(true);
+    setFitnessGoalNote('');
+    try {
+      const res = await fetch(`/api/fitness-goals/${goalId}`, {
+        method: 'DELETE'
+      });
+      const data = await readJsonBody(res);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Could not delete fitness goal');
+      }
+      setFitnessGoalNote('Fitness goal deleted successfully.');
+      
+      // Refresh fitness goals
+      const fitnessGoalsRes = await fetch(`/api/fitness-goals/member/${memberId}`);
+      const fitnessGoalsData = await readJsonBody(fitnessGoalsRes);
+      if (fitnessGoalsRes.ok && Array.isArray(fitnessGoalsData)) {
+        setFitnessGoals(fitnessGoalsData);
+      }
+    } catch (err) {
+      console.error(err);
+      setFitnessGoalNote(err.message);
+    } finally {
+      setFitnessGoalBusy(false);
+    }
+  }
+
+  async function loadGoalProgress(goalId) {
+    if (!goalId) return null;
+    try {
+      const res = await fetch(`/api/fitness-goals/${goalId}/progress`);
+      const data = await readJsonBody(res);
+      if (res.ok) {
+        // Get the goal details to compare with measurements
+        const goal = fitnessGoals.find(g => g.goal_id === goalId);
+        if (goal && bodyMeasurements && bodyMeasurements.length > 0) {
+          return analyzeProgressWithMeasurements(data, goal, bodyMeasurements);
+        }
+        return data;
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to load goal progress:', err);
+      return null;
+    }
+  }
+
+  function analyzeProgressWithMeasurements(progressData, goal, measurements) {
+    const latestMeasurement = measurements[measurements.length - 1];
+    const startMeasurement = measurements.find(m => 
+      new Date(m.record_date) >= new Date(goal.start_date)
+    );
+    
+    const analysis = {
+      ...progressData,
+      measurementComparison: null,
+      recommendations: [],
+      progressDetails: {}
+    };
+
+    // Analyze based on goal type
+    switch (goal.goal_type) {
+      case 'weight_loss':
+        if (latestMeasurement?.weight && startMeasurement?.weight) {
+          const weightLoss = startMeasurement.weight - latestMeasurement.weight;
+          const targetWeight = parseFloat(goal.target_value) || 0;
+          const initialWeight = startMeasurement.weight;
+          const currentWeight = latestMeasurement.weight;
+          const targetLoss = initialWeight - targetWeight;
+          const progressPercentage = targetLoss > 0 ? (weightLoss / targetLoss) * 100 : 0;
+          
+          analysis.measurementComparison = {
+            type: 'weight_loss',
+            startWeight: initialWeight,
+            currentWeight: currentWeight,
+            targetWeight: targetWeight,
+            weightLoss: weightLoss,
+            progressPercentage: Math.min(100, Math.max(0, progressPercentage)),
+            unit: 'kg'
+          };
+          
+          // Add recommendations
+          if (progressPercentage < 25) {
+            analysis.recommendations.push('Focus on consistent cardio and calorie deficit');
+          } else if (progressPercentage < 75) {
+            analysis.recommendations.push('Great progress! Keep maintaining current routine');
+          } else {
+            analysis.recommendations.push('Almost there! Time to focus on maintenance');
+          }
+        }
+        break;
+        
+      case 'muscle_gain':
+        if (latestMeasurement?.muscle_mass && startMeasurement?.muscle_mass) {
+          const muscleGain = latestMeasurement.muscle_mass - startMeasurement.muscle_mass;
+          const targetMuscle = parseFloat(goal.target_value) || 0;
+          const initialMuscle = startMeasurement.muscle_mass;
+          const currentMuscle = latestMeasurement.muscle_mass;
+          const targetGain = targetMuscle - initialMuscle;
+          const progressPercentage = targetGain > 0 ? (muscleGain / targetGain) * 100 : 0;
+          
+          analysis.measurementComparison = {
+            type: 'muscle_gain',
+            startMuscle: initialMuscle,
+            currentMuscle: currentMuscle,
+            targetMuscle: targetMuscle,
+            muscleGain: muscleGain,
+            progressPercentage: Math.min(100, Math.max(0, progressPercentage)),
+            unit: 'kg'
+          };
+          
+          // Add recommendations
+          if (progressPercentage < 25) {
+            analysis.recommendations.push('Increase protein intake and focus on compound exercises');
+          } else if (progressPercentage < 75) {
+            analysis.recommendations.push('Excellent progress! Continue with strength training');
+          } else {
+            analysis.recommendations.push('Goal nearly achieved! Focus on muscle definition');
+          }
+        }
+        break;
+        
+      case 'strength_training':
+        // Analyze workout logs for strength progress
+        const strengthLogs = workoutLogs.filter(log => 
+          log.log_date >= goal.start_date && 
+          parseFloat(log.weight_used) > 0
+        );
+        
+        if (strengthLogs.length > 0) {
+          const avgWeightIncrease = calculateStrengthProgress(strengthLogs);
+          analysis.measurementComparison = {
+            type: 'strength_training',
+            avgWeightIncrease: avgWeightIncrease,
+            totalWorkouts: strengthLogs.length,
+            progressPercentage: Math.min(100, avgWeightIncrease * 10) // Estimate progress
+          };
+          
+          analysis.recommendations.push('Keep progressively overloading weights');
+          if (avgWeightIncrease < 2) {
+            analysis.recommendations.push('Consider increasing weight more frequently');
+          }
+        }
+        break;
+        
+      case 'endurance_improvement':
+        // Analyze workout logs for endurance (reps/duration)
+        const enduranceLogs = workoutLogs.filter(log => 
+          log.log_date >= goal.start_date && 
+          parseFloat(log.reps_completed) > 0
+        );
+        
+        if (enduranceLogs.length > 0) {
+          const avgRepsIncrease = calculateEnduranceProgress(enduranceLogs);
+          analysis.measurementComparison = {
+            type: 'endurance_improvement',
+            avgRepsIncrease: avgRepsIncrease,
+            totalWorkouts: enduranceLogs.length,
+            progressPercentage: Math.min(100, avgRepsIncrease * 5) // Estimate progress
+          };
+          
+          analysis.recommendations.push('Focus on increasing reps and reducing rest time');
+          if (avgRepsIncrease < 3) {
+            analysis.recommendations.push('Try adding more cardio sessions');
+          }
+        }
+        break;
+        
+      case 'general_fitness':
+        // General fitness based on overall activity
+        const totalWorkouts = workoutLogs.filter(log => log.log_date >= goal.start_date).length;
+        const daysSinceStart = Math.ceil((new Date() - new Date(goal.start_date)) / (1000 * 60 * 60 * 24));
+        const workoutFrequency = totalWorkouts / daysSinceStart;
+        
+        analysis.measurementComparison = {
+          type: 'general_fitness',
+          totalWorkouts: totalWorkouts,
+          workoutFrequency: workoutFrequency,
+          daysSinceStart: daysSinceStart,
+          progressPercentage: Math.min(100, workoutFrequency * 20 * 7) // Target 3-4 workouts per week
+        };
+        
+        if (workoutFrequency < 0.3) {
+          analysis.recommendations.push('Increase workout frequency to 3-4 times per week');
+        } else if (workoutFrequency < 0.6) {
+          analysis.recommendations.push('Good consistency! Try adding variety to workouts');
+        } else {
+          analysis.recommendations.push('Excellent consistency! Focus on progressive overload');
+        }
+        break;
+    }
+
+    // Add time-based analysis
+    const daysElapsed = Math.ceil((new Date() - new Date(goal.start_date)) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil((new Date(goal.target_date) - new Date(goal.start_date)) / (1000 * 60 * 60 * 24));
+    const timeProgress = Math.min(100, (daysElapsed / totalDays) * 100);
+    
+    analysis.progressDetails = {
+      daysElapsed,
+      totalDays,
+      timeProgress,
+      daysRemaining: Math.max(0, totalDays - daysElapsed),
+      isOnTrack: analysis.measurementComparison?.progressPercentage >= timeProgress
+    };
+
+    return analysis;
+  }
+
+  function calculateStrengthProgress(logs) {
+    if (logs.length < 2) return 0;
+    
+    const sortedLogs = logs.sort((a, b) => new Date(a.log_date) - new Date(b.log_date));
+    const firstLog = sortedLogs[0];
+    const lastLog = sortedLogs[sortedLogs.length - 1];
+    
+    return parseFloat(lastLog.weight_used) - parseFloat(firstLog.weight_used);
+  }
+
+  function calculateEnduranceProgress(logs) {
+    if (logs.length < 2) return 0;
+    
+    const sortedLogs = logs.sort((a, b) => new Date(a.log_date) - new Date(b.log_date));
+    const firstLog = sortedLogs[0];
+    const lastLog = sortedLogs[sortedLogs.length - 1];
+    
+    return parseFloat(lastLog.reps_completed) - parseFloat(firstLog.reps_completed);
+  }
 
   const profile = dashboard?.profile || cachedProfile;
   const subscription = dashboard?.subscription;
@@ -486,6 +950,8 @@ function Dashboard() {
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'membership', label: 'Membership' },
+            { id: 'fitness-goals', label: 'Fitness Goals' },
+            { id: 'classes', label: 'Group Classes' },
             { id: 'schedule', label: 'Schedule' },
             { id: 'workouts', label: 'Workout plans' },
             { id: 'diet', label: 'Diet plans' },
@@ -536,6 +1002,15 @@ function Dashboard() {
         </header>
 
         {error && <div className="member-error-banner">{error}</div>}
+        
+        {toast && (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={hideToast}
+          />
+        )}
 
         <div className="member-panels">
           {activeNav === 'overview' && (
@@ -746,6 +1221,184 @@ function Dashboard() {
                   )}
                 </div>
               </div>
+            </section>
+          )}
+
+          {activeNav === 'fitness-goals' && (
+            <div className="fitness-goals-container">
+              <section className="fitness-goals-section">
+                <div className="fitness-goals-header">
+                  <h2>Your Fitness Goals</h2>
+                  <p>Set and track your personal fitness goals with progress monitoring.</p>
+                </div>
+                
+                {fitnessGoalNote && (
+                  <div className={`fitness-note ${fitnessGoalNote.includes('success') ? 'fitness-note-success' : 'fitness-note-error'}`}>
+                    {fitnessGoalNote}
+                  </div>
+                )}
+
+                <div className="fitness-goals-list">
+                  {fitnessGoals.length === 0 ? (
+                    <div className="fitness-goal-empty">
+                      No fitness goals set yet. Create your first goal below!
+                    </div>
+                  ) : (
+                    fitnessGoals.map((goal) => (
+                      <div key={goal.goal_id} className="fitness-goal-card">
+                        <div className="fitness-goal-header">
+                          <h3>{goal.goal_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+                          <span className={`fitness-goal-status fitness-goal-${goal.status || 'active'}`}>
+                            {goal.status || 'active'}
+                          </span>
+                        </div>
+                        
+                        <div className="fitness-progress-bar">
+                          <div className="fitness-progress-fill" style={{width: `${goal.progress_percentage || 0}%`}}></div>
+                        </div>
+                        
+                        {goal.progress_percentage && (
+                          <div className="fitness-progress-text">
+                            {Math.round(goal.progress_percentage)}% Complete
+                          </div>
+                        )}
+                        
+                        <div className="fitness-goal-details">
+                          <p><strong>Target:</strong> {goal.target_value}</p>
+                          <p><strong>Start:</strong> {formatDate(goal.start_date)}</p>
+                          <p><strong>Target Date:</strong> {formatDate(goal.target_date)}</p>
+                        </div>
+                        <div className="fitness-goal-actions">
+                          <button 
+                            className="fitness-goal-btn fitness-goal-btn-progress"
+                            onClick={() => {
+                              // Load and show detailed progress
+                              loadGoalProgress(goal.goal_id).then(progress => {
+                                if (progress) {
+                                  showDetailedProgress(progress, goal);
+                                } else {
+                                  showToast('Progress data not available', 'error');
+                                }
+                              });
+                            }}
+                          >
+                            View Progress
+                          </button>
+                          <button 
+                            className="fitness-goal-btn fitness-goal-btn-delete"
+                            onClick={() => handleDeleteFitnessGoal(goal.goal_id)}
+                            disabled={fitnessGoalBusy}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section className="fitness-goals-section">
+                <div className="fitness-goals-header">
+                  <h2>Create New Goal</h2>
+                  <p>Set a new fitness goal to track your progress.</p>
+                </div>
+                
+                <form onSubmit={handleFitnessGoalSubmit} className="fitness-goal-form">
+                  <div className="fitness-form-group">
+                    <label htmlFor="goal_type">Goal Type</label>
+                    <select
+                      id="goal_type"
+                      value={fitnessGoalForm.goal_type}
+                      onChange={(e) => setFitnessGoalForm(prev => ({ ...prev, goal_type: e.target.value }))}
+                      required
+                      disabled={fitnessGoalBusy}
+                    >
+                      <option value="">Select a goal type</option>
+                      <option value="weight_loss">Weight Loss</option>
+                      <option value="muscle_gain">Muscle Gain</option>
+                      <option value="endurance_improvement">Endurance Improvement</option>
+                      <option value="strength_training">Strength Training</option>
+                      <option value="general_fitness">General Fitness</option>
+                    </select>
+                  </div>
+
+                  <div className="fitness-form-group">
+                    <label htmlFor="target_value">Target Value</label>
+                    <input
+                      id="target_value"
+                      type="text"
+                      value={fitnessGoalForm.target_value}
+                      onChange={(e) => setFitnessGoalForm(prev => ({ ...prev, target_value: e.target.value }))}
+                      placeholder="e.g., 10 kg, 30 minutes, 50 lbs"
+                      required
+                      disabled={fitnessGoalBusy}
+                    />
+                  </div>
+
+                  <div className="fitness-form-group">
+                    <label htmlFor="start_date">Start Date</label>
+                    <input
+                      id="start_date"
+                      type="date"
+                      value={fitnessGoalForm.start_date}
+                      onChange={(e) => setFitnessGoalForm(prev => ({ ...prev, start_date: e.target.value }))}
+                      required
+                      disabled={fitnessGoalBusy}
+                    />
+                  </div>
+
+                  <div className="fitness-form-group">
+                    <label htmlFor="target_date">Target Date</label>
+                    <input
+                      id="target_date"
+                      type="date"
+                      value={fitnessGoalForm.target_date}
+                      onChange={(e) => setFitnessGoalForm(prev => ({ ...prev, target_date: e.target.value }))}
+                      required
+                      disabled={fitnessGoalBusy}
+                      min={fitnessGoalForm.start_date}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="fitness-submit-btn"
+                    disabled={fitnessGoalBusy || !fitnessGoalForm.goal_type || !fitnessGoalForm.target_value || !fitnessGoalForm.target_date}
+                  >
+                    {fitnessGoalBusy ? 'Creating...' : 'Create Goal'}
+                  </button>
+                </form>
+              </section>
+            </div>
+          )}
+
+          {activeNav === 'classes' && (
+            <section className="member-card member-card-pad member-card-wide">
+              <h2>Group Fitness Classes</h2>
+              <p className="member-muted">Browse and enroll in group fitness classes. Quarterly and Yearly plans include access to all classes.</p>
+              
+              {classes.length === 0 ? (
+                <p className="member-muted">No classes available at the moment.</p>
+              ) : (
+                <div className="classes-grid">
+                  {classes.map((classItem) => {
+                    const enrollments = classEnrollments[classItem.class_id] || [];
+                    
+                    return (
+                      <ClassCard
+                        key={classItem.class_id}
+                        classItem={classItem}
+                        enrollments={enrollments}
+                        memberId={memberId}
+                        enrollmentBusy={enrollmentBusy}
+                        onEnroll={handleEnrollInClass}
+                        onUnenroll={handleUnenrollFromClass}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </section>
           )}
 

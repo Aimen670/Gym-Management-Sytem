@@ -10,6 +10,9 @@ const authRoutes = require('./routes/authRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const trainingBookingRoutes = require('./routes/trainingBookingRoutes');
+const classRoutes = require('./routes/classRoutes');
+const enrollmentRoutes = require('./routes/enrollmentRoutes');
+const fitnessGoalRoutes = require('./routes/fitnessGoalRoutes');
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,6 +25,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api', trainerRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', trainingBookingRoutes);
+app.use('/api', classRoutes);
+app.use('/api', enrollmentRoutes);
+app.use('/api', fitnessGoalRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello from the backend!');

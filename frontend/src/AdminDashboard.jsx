@@ -453,8 +453,7 @@ function convertTo24Hour(time) {
       plan_ids: (classForm.plan_ids || []).map(id => Number(id))
     };
 
-    console.log("FINAL PAYLOAD:", payload); // optional debug
-
+    
     const url = editingClassId
       ? `http://localhost:5000/api/admin/classes/${editingClassId}`
       : 'http://localhost:5000/api/admin/classes';
@@ -1632,198 +1631,211 @@ function convertTo24Hour(time) {
               <h2>Workout Plan Management</h2>
               <p>Create workout plans and assign them to members.</p>
             </div>
-            <div className="admin-grid-layout">
-              <form className="admin-form-panel" onSubmit={handleWorkoutPlanSubmit}>
+            <div className="admin-workout-plan-container">
+              <form className="admin-workout-form" onSubmit={handleWorkoutPlanSubmit}>
                 <h3>Add Workout Plan</h3>
-                <label className="admin-form-label" htmlFor="workout-member">Member</label>
-                <select
-                  className="admin-form-input"
-                  id="workout-member"
-                  name="member_id"
-                  value={workoutPlanForm.member_id}
-                  onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, member_id: e.target.value })}
-                  required
-                >
-                  <option value="">Select member</option>
-                  {members.map((member) => (
-                    <option key={member.member_id} value={member.member_id}>
-                      {member.full_name} (#{member.member_id})
-                    </option>
-                  ))}
-                </select>
-                <label className="admin-form-label" htmlFor="workout-trainer">Trainer</label>
-                <select
-                  className="admin-form-input"
-                  id="workout-trainer"
-                  name="trainer_id"
-                  value={workoutPlanForm.trainer_id}
-                  onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, trainer_id: e.target.value })}
-                >
-                  <option value="">Unassigned</option>
-                  {trainers.map((trainer) => (
-                    <option key={trainer.trainer_id} value={trainer.trainer_id}>
-                      {trainer.name}
-                    </option>
-                  ))}
-                </select>
-
-                <div className="admin-workout-exercise-header">
-                  <span>Exercises</span>
-                  <span className="admin-workout-exercise-hint">Select exercises and set sets/reps/day</span>
+                
+                <div className="admin-workout-select-group">
+                  <label className="admin-workout-select-label" htmlFor="workout-member">MEMBER</label>
+                  <select
+                    className="admin-workout-select"
+                    id="workout-member"
+                    name="member_id"
+                    value={workoutPlanForm.member_id}
+                    onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, member_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Select member</option>
+                    {members.map((member) => (
+                      <option key={member.member_id} value={member.member_id}>
+                        {member.full_name} (#{member.member_id})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <div className="admin-workout-exercise-select">
-                  {exercisesCatalog.length === 0 ? (
-                    <p className="admin-empty">No exercises available.</p>
-                  ) : (
-                    exercisesCatalog.map((exercise) => {
-                      const selected = workoutPlanForm.exercises.find(
-                        (item) => item.exercise_id === exercise.exercise_id
-                      );
+                <div className="admin-workout-select-group">
+                  <label className="admin-workout-select-label" htmlFor="workout-trainer">TRAINER</label>
+                  <select
+                    className="admin-workout-select"
+                    id="workout-trainer"
+                    name="trainer_id"
+                    value={workoutPlanForm.trainer_id}
+                    onChange={(e) => setWorkoutPlanForm({ ...workoutPlanForm, trainer_id: e.target.value })}
+                  >
+                    <option value="">Unassigned</option>
+                    {trainers.map((trainer) => (
+                      <option key={trainer.trainer_id} value={trainer.trainer_id}>
+                        {trainer.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                      return (
-                        <div key={exercise.exercise_id} className="admin-workout-exercise-option">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(selected)}
-                              onChange={(e) => {
-                                const { checked } = e.target;
-                                setWorkoutPlanForm((prev) => {
-                                  const nextExercises = checked
-                                    ? [
-                                        ...prev.exercises,
-                                        {
-                                          exercise_id: exercise.exercise_id,
-                                          sets: '',
-                                          reps: '',
-                                          schedule_day: ''
-                                        }
-                                      ]
-                                    : prev.exercises.filter(
-                                        (item) => item.exercise_id !== exercise.exercise_id
-                                      );
-                                  return { ...prev, exercises: nextExercises };
-                                });
-                              }}
-                            />
-                            <span className="admin-workout-exercise-name">{exercise.exercise_name}</span>
-                          </label>
-                          {selected && (
-                            <div className="admin-workout-exercise-fields">
-                              <div className="admin-exercise-field">
-                                <label className="admin-exercise-label">Sets</label>
-                                <input
-                                  className="admin-form-input"
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  value={selected.sets}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    setWorkoutPlanForm((prev) => ({
-                                      ...prev,
-                                      exercises: prev.exercises.map((item) =>
-                                        item.exercise_id === exercise.exercise_id
-                                          ? { ...item, sets: value }
-                                          : item
-                                      )
-                                    }));
-                                  }}
-                                />
-                              </div>
-                              <div className="admin-exercise-field">
-                                <label className="admin-exercise-label">Reps</label>
-                                <input
-                                  className="admin-form-input"
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  value={selected.reps}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    setWorkoutPlanForm((prev) => ({
-                                      ...prev,
-                                      exercises: prev.exercises.map((item) =>
-                                        item.exercise_id === exercise.exercise_id
-                                          ? { ...item, reps: value }
-                                          : item
-                                      )
-                                    }));
-                                  }}
-                                />
-                              </div>
-                              <div className="admin-exercise-field">
-                                <label className="admin-exercise-label">Day</label>
-                                <select
-                                  className="admin-form-input"
-                                  value={selected.schedule_day}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    setWorkoutPlanForm((prev) => ({
-                                      ...prev,
-                                      exercises: prev.exercises.map((item) =>
-                                        item.exercise_id === exercise.exercise_id
-                                          ? { ...item, schedule_day: value }
-                                          : item
-                                      )
-                                    }));
-                                  }}
-                                >
-                                  <option value="">Any day</option>
-                                  <option value="monday">Monday</option>
-                                  <option value="tuesday">Tuesday</option>
-                                  <option value="wednesday">Wednesday</option>
-                                  <option value="thursday">Thursday</option>
-                                  <option value="friday">Friday</option>
-                                  <option value="saturday">Saturday</option>
-                                  <option value="sunday">Sunday</option>
-                                </select>
-                              </div>
+                <div className="admin-workout-exercises-section">
+                  <div className="admin-workout-exercises-header">
+                    <span className="admin-workout-exercises-title">Exercises</span>
+                    <span className="admin-workout-exercises-hint">Select exercises and set sets/reps/day</span>
+                  </div>
+
+                  <div className="admin-workout-exercises-list">
+                    {exercisesCatalog.length === 0 ? (
+                      <p className="admin-workout-empty-state">No exercises available.</p>
+                    ) : (
+                      exercisesCatalog.map((exercise) => {
+                        const selected = workoutPlanForm.exercises.find(
+                          (item) => item.exercise_id === exercise.exercise_id
+                        );
+
+                        return (
+                          <div key={exercise.exercise_id} className="admin-workout-exercise-item">
+                            <div className="admin-workout-exercise-checkbox">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(selected)}
+                                onChange={(e) => {
+                                  const { checked } = e.target;
+                                  setWorkoutPlanForm((prev) => {
+                                    const nextExercises = checked
+                                      ? [
+                                          ...prev.exercises,
+                                          {
+                                            exercise_id: exercise.exercise_id,
+                                            sets: '',
+                                            reps: '',
+                                            schedule_day: ''
+                                          }
+                                        ]
+                                      : prev.exercises.filter(
+                                          (item) => item.exercise_id !== exercise.exercise_id
+                                        );
+                                    return { ...prev, exercises: nextExercises };
+                                  });
+                                }}
+                              />
+                              <span className="admin-workout-exercise-name">{exercise.exercise_name}</span>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                            {selected && (
+                              <div className="admin-workout-exercise-fields">
+                                <div className="admin-exercise-field-group">
+                                  <label className="admin-exercise-field-label">Sets</label>
+                                  <input
+                                    className="admin-exercise-field-input"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={selected.sets}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      setWorkoutPlanForm((prev) => ({
+                                        ...prev,
+                                        exercises: prev.exercises.map((item) =>
+                                          item.exercise_id === exercise.exercise_id
+                                            ? { ...item, sets: value }
+                                            : item
+                                        )
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="admin-exercise-field-group">
+                                  <label className="admin-exercise-field-label">Reps</label>
+                                  <input
+                                    className="admin-exercise-field-input"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={selected.reps}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      setWorkoutPlanForm((prev) => ({
+                                        ...prev,
+                                        exercises: prev.exercises.map((item) =>
+                                          item.exercise_id === exercise.exercise_id
+                                            ? { ...item, reps: value }
+                                            : item
+                                        )
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="admin-exercise-field-group">
+                                  <label className="admin-exercise-field-label">Day</label>
+                                  <select
+                                    className="admin-exercise-field-input"
+                                    value={selected.schedule_day}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      setWorkoutPlanForm((prev) => ({
+                                        ...prev,
+                                        exercises: prev.exercises.map((item) =>
+                                          item.exercise_id === exercise.exercise_id
+                                            ? { ...item, schedule_day: value }
+                                            : item
+                                        )
+                                      }));
+                                    }}
+                                  >
+                                    <option value="">Any day</option>
+                                    <option value="monday">Monday</option>
+                                    <option value="tuesday">Tuesday</option>
+                                    <option value="wednesday">Wednesday</option>
+                                    <option value="thursday">Thursday</option>
+                                    <option value="friday">Friday</option>
+                                    <option value="saturday">Saturday</option>
+                                    <option value="sunday">Sunday</option>
+                                  </select>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
 
-                <button className="admin-btn-primary" type="submit" disabled={loading}>
+                <button className="admin-workout-submit-btn" type="submit" disabled={loading}>
                   {loading ? 'Saving...' : 'Add Workout Plan'}
                 </button>
               </form>
 
-              <div className="admin-list-panel">
-                <h3>Workout Plans</h3>
+              <div className="admin-workout-plans-list">
+                <h3 className="admin-workout-plans-header">Workout Plans</h3>
                 {workoutPlans.length === 0 ? (
-                  <p className="admin-empty">No workout plans yet.</p>
+                  <p className="admin-workout-empty-state">No workout plans yet.</p>
                 ) : (
                   workoutPlans.map((plan) => (
-                    <div key={plan.workout_plan_id} className="admin-card admin-card-stack">
-                      <div>
-                        <h4>Plan #{plan.workout_plan_id}</h4>
-                        <p className="admin-card-email">
-                          Member: {plan.member_name || plan.member_id} · Trainer: {plan.trainer_name || 'Unassigned'}
-                        </p>
-                        <div className="admin-card-meta">
-                          {plan.created_date && (
-                            <span>{String(plan.created_date).split('T')[0]}</span>
-                          )}
-                          <span>{plan.exercises ? plan.exercises.length : 0} exercises</span>
-                        </div>
-                        {plan.exercises && plan.exercises.length > 0 && (
-                          <div className="admin-workout-exercise-list">
-                            {plan.exercises.map((exercise) => (
-                              <div key={exercise.exercise_id} className="admin-workout-exercise-item">
-                                <span>{exercise.exercise_name}</span>
-                                <span>{exercise.sets} sets</span>
-                                <span>{exercise.reps} reps</span>
-                                <span>{exercise.schedule_day || 'Any day'}</span>
-                              </div>
-                            ))}
-                          </div>
+                    <div key={plan.workout_plan_id} className="admin-workout-plan-card">
+                      <h4 className="admin-workout-plan-title">Plan #{plan.workout_plan_id}</h4>
+                      <div className="admin-workout-plan-meta">
+                        <span className="admin-workout-plan-meta-item">
+                          {plan.member_name || plan.member_id}
+                        </span>
+                        <span className="admin-workout-plan-meta-item trainer">
+                          {plan.trainer_name || 'Unassigned'}
+                        </span>
+                        {plan.created_date && (
+                          <span className="admin-workout-plan-meta-item date">
+                            {String(plan.created_date).split('T')[0]}
+                          </span>
                         )}
+                        <span className="admin-workout-plan-meta-item exercises">
+                          {plan.exercises ? plan.exercises.length : 0} exercises
+                        </span>
                       </div>
+                      {plan.exercises && plan.exercises.length > 0 && (
+                        <div className="admin-workout-plan-exercises">
+                          {plan.exercises.map((exercise) => (
+                            <div key={exercise.exercise_id} className="admin-workout-plan-exercise-item">
+                              <span className="admin-workout-plan-exercise-name">{exercise.exercise_name}</span>
+                              <span className="admin-workout-plan-exercise-detail">{exercise.sets} sets</span>
+                              <span className="admin-workout-plan-exercise-detail">{exercise.reps} reps</span>
+                              <span className="admin-workout-plan-exercise-detail">{exercise.schedule_day || 'Any day'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
