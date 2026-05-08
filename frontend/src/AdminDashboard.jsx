@@ -1390,7 +1390,10 @@ function convertTo24Hour(time) {
           <div className="admin-section-full">
             <div className="admin-section-header">
               <h2>Class & Schedule Management</h2>
-              <button className="admin-btn-primary" onClick={() => setEditingClassId(null)}>
+              <button className="admin-btn-primary" onClick={() => {
+                setEditingClassId(null);
+                setClassForm(emptyClass);
+              }}>
                 + Create New Class
               </button>
             </div>
