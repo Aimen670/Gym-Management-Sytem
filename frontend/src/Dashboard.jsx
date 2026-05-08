@@ -556,7 +556,24 @@ function Dashboard() {
       showToast('Successfully enrolled in class!', 'success');
     } catch (err) {
       console.error('Enrollment error:', err);
-      setError(err.message);
+      const errorMessage = err.message.toLowerCase();
+      
+      // Check if error is related to expired/invalid membership
+      if (errorMessage.includes('no active subscription') || 
+          errorMessage.includes('expired') || 
+          errorMessage.includes('please subscribe')) {
+        // Show specific popup for expired membership
+        showToast('You cannot enroll in this class because your membership has expired. Please renew your membership to continue.', 'error', 5000);
+        setError('');
+      } else if (errorMessage.includes('upgrade your plan') || 
+                 errorMessage.includes('monthly plan') ||
+                 errorMessage.includes('membership plan does not include access')) {
+        // Show specific popup for monthly membership restriction
+        showToast('Upgrade your membership to Quarterly or Yearly plan to enroll in group classes.', 'error', 5000);
+        setError('');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setEnrollmentBusy(false);
     }
@@ -937,7 +954,7 @@ function Dashboard() {
 
   return (
     <div className="member-dashboard">
-      <aside className="member-sidebar">
+            <aside className="member-sidebar">
         <div className="member-brand">
           <span className="member-brand-mark" aria-hidden />
           <div>

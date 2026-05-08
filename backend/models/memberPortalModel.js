@@ -315,7 +315,7 @@ async function getMemberDashboard(memberId) {
             WHERE ms.member_id = @member_id
             ORDER BY
                 CASE WHEN ms.end_date >= CAST(GETDATE() AS DATE) THEN 0 ELSE 1 END,
-                ms.end_date DESC
+                ms.start_date DESC
         `);
 
     const classesResult = await pool.request()

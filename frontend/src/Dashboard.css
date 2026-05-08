@@ -1160,422 +1160,245 @@
   font-size: 14px;
 }
 
-/* Enhanced Workout Plan Management Styles */
-.admin-workout-plan-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+
+/* Admin Form Extensions */
+.admin-form-section {
   margin-top: 24px;
 }
 
-@media (max-width: 1200px) {
-  .admin-workout-plan-container {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
+.admin-form-section h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #ffffff;
+  border-bottom: 1px solid #333333;
+  padding-bottom: 8px;
 }
 
-/* Enhanced Add Workout Plan Form */
-.admin-workout-form {
-  background: linear-gradient(145deg, #1a2f33 0%, #0f1f22 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(40, 199, 182, 0.1);
-  padding: 32px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-.admin-workout-form:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 48px rgba(40, 199, 182, 0.15);
-  border-color: rgba(40, 199, 182, 0.2);
-}
-
-.admin-workout-form h3 {
-  margin: 0 0 24px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #d7fffb;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 2px solid #28c7b6;
-  padding-bottom: 16px;
-}
-
-.admin-workout-form h3::before {
-  content: "💪";
-  font-size: 28px;
-}
-
-.admin-workout-select-group {
-  margin-bottom: 24px;
-}
-
-.admin-workout-select-label {
-  display: block;
-  color: #d7fffb;
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-
-.admin-workout-select {
-  width: 100%;
-  background: linear-gradient(135deg, #0c3b3f 0%, #0a2a2d 100%);
-  border: 2px solid rgba(40, 199, 182, 0.2);
-  border-radius: 12px;
-  padding: 14px 16px;
-  color: #d7fffb;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.admin-workout-select:focus {
-  outline: none;
-  border-color: #28c7b6;
-  box-shadow: 0 0 0 3px rgba(40, 199, 182, 0.1);
-}
-
-.admin-workout-select option {
-  background: #0a2a2d;
-  color: #d7fffb;
-}
-
-/* Enhanced Exercises Section */
-.admin-workout-exercises-section {
-  margin-top: 32px;
-}
-
-.admin-workout-exercises-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(40, 199, 182, 0.2);
-}
-
-.admin-workout-exercises-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #d7fffb;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.admin-workout-exercises-title::before {
-  content: "🏋️";
-  font-size: 20px;
-}
-
-.admin-workout-exercises-hint {
+.admin-form-hint {
+  margin: 0 0 16px;
   font-size: 12px;
-  color: #8ca3a0;
+  color: #999999;
   font-style: italic;
 }
 
-.admin-workout-exercises-list {
-  max-height: 400px;
+.admin-exercises-list {
+  max-height: 300px;
   overflow-y: auto;
   padding-right: 8px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 16px;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  background: #0f0f0f;
 }
 
-.admin-workout-exercises-list::-webkit-scrollbar {
+.admin-exercises-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.admin-workout-exercises-list::-webkit-scrollbar-track {
+.admin-exercises-list::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 3px;
 }
 
-.admin-workout-exercises-list::-webkit-scrollbar-thumb {
-  background: #28c7b6;
+.admin-exercises-list::-webkit-scrollbar-thumb {
+  background: #00a896;
   border-radius: 3px;
 }
 
-.admin-workout-exercise-item {
-  background: linear-gradient(135deg, #0c3b3f 0%, #0a2a2d 100%);
-  border: 1px solid rgba(40, 199, 182, 0.15);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+.admin-exercise-item {
+  padding: 12px;
+  border-bottom: 1px solid #333333;
   transition: all 0.3s ease;
 }
 
-.admin-workout-exercise-item:hover {
-  border-color: rgba(40, 199, 182, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(40, 199, 182, 0.1);
+.admin-exercise-item:last-child {
+  border-bottom: none;
 }
 
-.admin-workout-exercise-checkbox {
+.admin-exercise-item:hover {
+  background: rgba(0, 168, 150, 0.05);
+}
+
+.admin-exercise-checkbox {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
 }
 
-.admin-workout-exercise-checkbox input[type="checkbox"] {
+.admin-exercise-checkbox:hover {
+  background: rgba(0, 168, 150, 0.1);
+}
+
+.admin-exercise-checkbox.checked {
+  background: rgba(0, 168, 150, 0.15);
+  padding-left: 12px;
+}
+
+.admin-exercise-item:has(.admin-exercise-checkbox.checked) {
+  border-left: 3px solid #00a896;
+}
+
+.admin-exercise-checkbox input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: #28c7b6;
+  accent-color: #00a896;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.admin-workout-exercise-name {
-  color: #d7fffb;
-  font-size: 16px;
+.admin-exercise-checkbox input[type="checkbox"]:checked {
+  transform: scale(1.1);
+}
+
+.admin-exercise-name {
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
 }
 
-.admin-workout-exercise-fields {
+.admin-exercise-checkbox:hover .admin-exercise-name {
+  color: #00a896;
+  transform: translateX(4px);
+}
+
+.admin-exercise-checkbox.checked .admin-exercise-name {
+  color: #00a896;
+  font-weight: 600;
+}
+
+.admin-exercise-fields {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
-  padding-left: 32px;
+  padding-left: 30px;
 }
 
 @media (max-width: 768px) {
-  .admin-workout-exercise-fields {
+  .admin-exercise-fields {
     grid-template-columns: 1fr;
     gap: 8px;
     padding-left: 0;
   }
 }
 
-.admin-exercise-field-group {
+.admin-exercise-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.admin-exercise-field-label {
-  color: #bde9e4;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.admin-exercise-field-input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(40, 199, 182, 0.2);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: #d7fffb;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.admin-exercise-field-input:focus {
-  outline: none;
-  border-color: #28c7b6;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* Enhanced Submit Button */
-.admin-workout-submit-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #28c7b6, #20b3a5);
-  color: white;
-  border: none;
+/* Admin List Panel */
+.admin-list-panel {
+  background: #1a1a1a;
+  border: 1px solid #333333;
   border-radius: 12px;
-  padding: 16px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.admin-workout-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #20b3a5, #18a395);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(40, 199, 182, 0.3);
-}
-
-.admin-workout-submit-btn:disabled {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.admin-workout-submit-btn::before {
-  content: "✨";
-  font-size: 18px;
-}
-
-/* Enhanced Workout Plans List */
-.admin-workout-plans-list {
-  background: linear-gradient(145deg, #1a2f33 0%, #0f1f22 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(40, 199, 182, 0.1);
-  padding: 32px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.admin-workout-plans-header {
-  margin: 0 0 24px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #d7fffb;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 2px solid #28c7b6;
-  padding-bottom: 16px;
-}
-
-.admin-workout-plans-header::before {
-  content: "📋";
-  font-size: 28px;
-}
-
-.admin-workout-plan-card {
-  background: linear-gradient(135deg, #0c3b3f 0%, #0a2a2d 100%);
-  border: 1px solid rgba(40, 199, 182, 0.15);
-  border-radius: 16px;
   padding: 24px;
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.admin-workout-plan-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #28c7b6, #20b3a5);
-}
-
-.admin-workout-plan-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(40, 199, 182, 0.2);
-  border-color: rgba(40, 199, 182, 0.3);
-}
-
-.admin-workout-plan-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #d7fffb;
-  margin: 0 0 12px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.admin-workout-plan-title::before {
-  content: "🎯";
-  font-size: 18px;
-}
-
-.admin-workout-plan-meta {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+  height: fit-content;
 }
 
-.admin-workout-plan-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #bde9e4;
+.admin-list-panel h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #ffffff;
+  border-bottom: 2px solid #00a896;
+  padding-bottom: 12px;
+}
+
+.admin-card {
+  background: #0f0f0f;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+  border-color: #00a896;
+  background: rgba(0, 168, 150, 0.05);
+  transform: translateY(-2px);
+}
+
+.admin-card h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.admin-card-email {
+  margin: 0 0 12px;
+  color: #999999;
   font-size: 14px;
 }
 
-.admin-workout-plan-meta-item::before {
-  content: "👤";
-  font-size: 16px;
-  opacity: 0.7;
+.admin-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.admin-workout-plan-meta-item.trainer::before {
-  content: "🏃";
+.admin-card-meta span {
+  color: #999999;
+  font-size: 12px;
+  background: rgba(0, 168, 150, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.admin-workout-plan-meta-item.date::before {
-  content: "📅";
+.admin-card-exercises {
+  padding-top: 12px;
+  border-top: 1px solid #333333;
 }
 
-.admin-workout-plan-meta-item.exercises::before {
-  content: "💪";
-}
-
-.admin-workout-plan-exercises {
-  padding-top: 16px;
-  border-top: 1px solid rgba(40, 199, 182, 0.1);
-}
-
-.admin-workout-plan-exercise-item {
+.admin-card-exercise-item {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
   margin-bottom: 8px;
   align-items: center;
 }
 
 @media (max-width: 768px) {
-  .admin-workout-plan-exercise-item {
+  .admin-card-exercise-item {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 4px;
   }
 }
 
-.admin-workout-plan-exercise-name {
-  color: #d7fffb;
+.admin-card-exercise-name {
+  color: #ffffff;
   font-weight: 500;
-  font-size: 14px;
-}
-
-.admin-workout-plan-exercise-detail {
-  color: #bde9e4;
   font-size: 13px;
-  text-align: center;
-  background: rgba(40, 199, 182, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
 }
 
-.admin-workout-empty-state {
+.admin-card-exercise-detail {
+  color: #999999;
+  font-size: 12px;
   text-align: center;
-  padding: 48px 24px;
-  color: #8ca3a0;
-  font-size: 16px;
+  background: rgba(0, 168, 150, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.admin-empty {
+  text-align: center;
+  padding: 24px;
+  color: #999999;
   font-style: italic;
-}
-
-.admin-workout-empty-state::before {
-  content: "💪";
-  display: block;
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+  font-size: 14px;
 }
 
 /* ===== NEW ADMIN DASHBOARD STYLES ===== */
