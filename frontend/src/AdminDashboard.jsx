@@ -34,8 +34,9 @@ const emptyEquipment = {
 };
 
 const emptyPayment = {
-  subscription_id: '',
-  amount: '',
+  member_id: '',
+  plan_id: '',
+  start_date: '',
   payment_method: ''
 };
 
@@ -74,7 +75,6 @@ function AdminDashboard() {
   const [classes, setClasses] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [pendingPayments, setPendingPayments] = useState([]);
   const [revenueReport, setRevenueReport] = useState(null);
   const [workoutPlans, setWorkoutPlans] = useState([]);
   const [exercisesCatalog, setExercisesCatalog] = useState([]);
@@ -165,11 +165,6 @@ function AdminDashboard() {
     setPayments(data);
   };
 
-  const loadPendingPayments = async () => {
-    const data = await fetchJson('http://localhost:5000/api/admin/payments/pending');
-    setPendingPayments(data);
-  };
-
   const loadRevenueReport = async () => {
     const data = await fetchJson('http://localhost:5000/api/admin/payments/revenue-report');
     setRevenueReport(data);
@@ -207,7 +202,6 @@ function AdminDashboard() {
           loadClasses(),
           loadEquipment(),
           loadPayments(),
-          loadPendingPayments(),
           loadRevenueReport(),
           loadWorkoutPlans(),
           loadExercisesCatalog(),
@@ -541,16 +535,21 @@ function convertTo24Hour(time) {
     setLoading(true);
     setError('');
     try {
-      const data = await fetchJson('http://localhost:5000/api/admin/payments', {
+      const memberId = paymentForm.member_id;
+      const payload = {
+        plan_id: paymentForm.plan_id,
+        payment_method: paymentForm.payment_method || undefined,
+        start_date: paymentForm.start_date || undefined
+      };
+      const data = await fetchJson(`http://localhost:5000/api/member/${memberId}/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(paymentForm)
+        body: JSON.stringify(payload)
       });
-      setPayments((prev) => [data, ...prev]);
+      await loadPayments();
       setPaymentForm(emptyPayment);
       // Reload related data
       await Promise.all([
-        loadPendingPayments(),
         loadRevenueReport(),
         loadOverview()
       ]);
@@ -776,7 +775,7 @@ function convertTo24Hour(time) {
             className={`admin-tab ${activeTab === 'payments' ? 'active' : ''}`}
             onClick={() => setActiveTab('payments')}
           >
-            Payments
+            Membership Billing
           </button>
           <button 
             className={`admin-tab ${activeTab === 'classes' ? 'active' : ''}`}
@@ -1251,14 +1250,14 @@ function convertTo24Hour(time) {
         {activeTab === 'payments' && (
           <div className="admin-section-full">
             <div className="admin-section-header">
-              <h2>Payment & Billing Management</h2>
-              <p>Record payments, track transaction history, and monitor revenue.</p>
+              <h2>Membership Billing</h2>
+              <p>Apply memberships to member accounts and review revenue.</p>
             </div>
 
             {/* Revenue Report Section */}
             {revenueReport && (
               <div className="admin-section">
-                <h3>Revenue Report</h3>
+                <h3>Revenue Summary</h3>
                 <div className="admin-stats-grid">
                   <div className="admin-stat-card">
                     <span>Total Revenue</span>
@@ -1275,12 +1274,12 @@ function convertTo24Hour(time) {
                 </div>
                 {revenueReport.byMethod && revenueReport.byMethod.length > 0 && (
                   <div className="admin-section">
-                    <h4>Revenue by Payment Method</h4>
+                    <h4>Revenue by Method</h4>
                     <div className="admin-stats-grid">
                       {revenueReport.byMethod.map((method) => (
                         <div key={method.payment_method} className="admin-stat-card">
                           <span>{method.payment_method.charAt(0).toUpperCase() + method.payment_method.slice(1)}</span>
-                          <strong>PKR {method.total_amount} ({method.transaction_count} txns)</strong>
+                          <strong>PKR {method.total_amount} ({method.transaction_count})</strong>
                         </div>
                       ))}
                     </div>
@@ -1289,60 +1288,50 @@ function convertTo24Hour(time) {
               </div>
             )}
 
-            {/* Pending Payments Section */}
-            <div className="admin-section">
-              <h3>Pending & Overdue Payments</h3>
-              {pendingPayments.length === 0 ? (
-                <p className="admin-empty">No pending payments.</p>
-              ) : (
-                <div className="admin-list-panel">
-                  {pendingPayments.map((payment) => (
-                    <div key={payment.subscription_id} className="admin-card">
-                      <div>
-                        <h4>{payment.member_name}</h4>
-                        <p className="admin-card-email">{payment.email}</p>
-                        <div className="admin-card-meta">
-                          <span className={`status-badge status-${payment.status === 'overdue' ? 'danger' : payment.status === 'due_soon' ? 'warning' : 'info'}`}>
-                            {payment.status === 'overdue' ? 'Overdue' : payment.status === 'due_soon' ? 'Due Soon' : 'Active'}
-                          </span>
-                          <span>{payment.plan_name} - PKR {payment.price}</span>
-                          {payment.days_remaining !== null && payment.days_remaining >= 0 && (
-                            <span>{payment.days_remaining} days remaining</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             <div className="admin-grid-layout">
               {/* Record Payment Form */}
               <form className="admin-form-panel" onSubmit={handlePaymentSubmit}>
-                <h3>Record New Payment</h3>
-                <label className="admin-form-label" htmlFor="payment-subscription-id">Subscription ID</label>
+                <h3>Apply Membership Payment</h3>
+                <label className="admin-form-label" htmlFor="payment-member">Member</label>
+                <select
+                  className="admin-form-input"
+                  id="payment-member"
+                  name="member_id"
+                  value={paymentForm.member_id}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, member_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select member</option>
+                  {members.map((member) => (
+                    <option key={member.member_id} value={member.member_id}>
+                      {member.full_name} ({member.email})
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="payment-plan">Membership Plan</label>
+                <select
+                  className="admin-form-input"
+                  id="payment-plan"
+                  name="plan_id"
+                  value={paymentForm.plan_id}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, plan_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select plan</option>
+                  {plans.map((plan) => (
+                    <option key={plan.plan_id} value={plan.plan_id}>
+                      {plan.plan_name} ({plan.duration_months} mo) - PKR {plan.price}
+                    </option>
+                  ))}
+                </select>
+                <label className="admin-form-label" htmlFor="payment-start-date">Start Date (optional)</label>
                 <input
                   className="admin-form-input"
-                  id="payment-subscription-id"
-                  name="subscription_id"
-                  value={paymentForm.subscription_id}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, subscription_id: e.target.value })}
-                  placeholder="Subscription ID"
-                  required
-                />
-                <label className="admin-form-label" htmlFor="payment-amount">Amount (PKR)</label>
-                <input
-                  className="admin-form-input"
-                  type="number"
-                  id="payment-amount"
-                  name="amount"
-                  value={paymentForm.amount}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                  placeholder="Amount (PKR)"
-                  min="0"
-                  step="0.01"
-                  required
+                  type="date"
+                  id="payment-start-date"
+                  name="start_date"
+                  value={paymentForm.start_date}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, start_date: e.target.value })}
                 />
                 <label className="admin-form-label" htmlFor="payment-method">Payment Method</label>
                 <select
@@ -1359,21 +1348,21 @@ function convertTo24Hour(time) {
                   <option value="online">Online</option>
                 </select>
                 <button className="admin-btn-primary" type="submit" disabled={loading}>
-                  {loading ? 'Recording...' : 'Record Payment'}
+                  {loading ? 'Applying...' : 'Apply Membership'}
                 </button>
               </form>
 
-              {/* Transaction History */}
+              {/* Membership Applications */}
               <div className="admin-list-panel">
-                <h3>Transaction History</h3>
+                <h3>Membership Activity</h3>
                 {payments.length === 0 ? (
-                  <p className="admin-empty">No payments recorded yet.</p>
+                  <p className="admin-empty">No memberships recorded yet.</p>
                 ) : (
                   payments.map((payment) => (
                     <div key={payment.payment_id} className="admin-card">
                       <div>
                         <h4>{payment.member_name}</h4>
-                        <p className="admin-card-email">{payment.plan_name} - Subscription #{payment.subscription_id}</p>
+                        <p className="admin-card-email">{payment.plan_name} - Membership #{payment.subscription_id}</p>
                         <div className="admin-card-meta">
                           <span className="status-badge status-completed">{payment.payment_method}</span>
                           <span><strong>PKR {payment.amount}</strong></span>
@@ -1393,12 +1382,6 @@ function convertTo24Hour(time) {
           <div className="admin-section-full">
             <div className="admin-section-header">
               <h2>Class & Schedule Management</h2>
-              <button className="admin-btn-primary" onClick={() => {
-                setEditingClassId(null);
-                setClassForm(emptyClass);
-              }}>
-                + Create New Class
-              </button>
             </div>
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleClassSubmit}>

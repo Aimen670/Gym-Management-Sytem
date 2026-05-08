@@ -453,6 +453,15 @@ async function subscribeMember(memberId, planId, options = {}) {
     request.input('start_date', sql.Date, startDate);
     request.input('duration_months', sql.Int, durationMonths);
 
+        await request.query(`
+            DELETE FROM member_subscriptions
+            WHERE member_id = @member_id
+              AND (
+                  end_date >= CAST(GETDATE() AS DATE)
+                  OR end_date >= @start_date
+              )
+        `);
+
     const insertSub = await request.query(`
         INSERT INTO member_subscriptions (member_id, plan_id, start_date, end_date)
         OUTPUT INSERTED.subscription_id, INSERTED.start_date, INSERTED.end_date
