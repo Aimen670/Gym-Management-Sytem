@@ -1691,6 +1691,26 @@
   color: #666666;
 }
 
+/* Fix date and time input text color */
+.admin-form-input[type="date"],
+.admin-form-input[type="time"] {
+  color: #ffffff !important;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.admin-form-input[type="date"]::-webkit-calendar-picker-indicator,
+.admin-form-input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Firefox */
+.admin-form-input[type="date"]::-moz-calendar-picker-indicator,
+.admin-form-input[type="time"]::-moz-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 .admin-password-wrapper {
   position: relative;
   display: flex;

@@ -170,7 +170,7 @@ async function createClass(payload) {
 
         const insertResult = await request.query(`
             INSERT INTO classes (class_name, trainer_id, schedule_date, schedule_time, capacity)
-            VALUES (@class_name, @trainer_id, @schedule_date, CAST(@schedule_time AS TIME), @capacity);
+            VALUES (@class_name, @trainer_id, @schedule_date, @schedule_time, @capacity);
             SELECT SCOPE_IDENTITY() as class_id;
         `);
 
@@ -232,7 +232,7 @@ async function updateClass(classId, payload) {
             SET class_name = @class_name,
                 trainer_id = @trainer_id,
                 schedule_date = @schedule_date,
-                schedule_time = CAST(@schedule_time AS TIME),
+                schedule_time = @schedule_time,
                 capacity = @capacity
             WHERE class_id = @class_id
         `);

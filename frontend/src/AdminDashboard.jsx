@@ -1037,9 +1037,6 @@ function convertTo24Hour(time) {
             <div className="admin-section-header">
               <h2>Trainer Management</h2>
               <p>Add, edit, or remove trainers.</p>
-              <button className="admin-btn-secondary" onClick={loadTrainers}>
-                Refresh
-              </button>
             </div>
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleTrainerSubmit}>
@@ -1324,17 +1321,21 @@ function convertTo24Hour(time) {
               {/* Record Payment Form */}
               <form className="admin-form-panel" onSubmit={handlePaymentSubmit}>
                 <h3>Record New Payment</h3>
+                <label className="admin-form-label" htmlFor="payment-subscription-id">Subscription ID</label>
                 <input
                   className="admin-form-input"
+                  id="payment-subscription-id"
                   name="subscription_id"
                   value={paymentForm.subscription_id}
                   onChange={(e) => setPaymentForm({ ...paymentForm, subscription_id: e.target.value })}
                   placeholder="Subscription ID"
                   required
                 />
+                <label className="admin-form-label" htmlFor="payment-amount">Amount (PKR)</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="payment-amount"
                   name="amount"
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
@@ -1343,8 +1344,10 @@ function convertTo24Hour(time) {
                   step="0.01"
                   required
                 />
+                <label className="admin-form-label" htmlFor="payment-method">Payment Method</label>
                 <select
                   className="admin-form-input"
+                  id="payment-method"
                   name="payment_method"
                   value={paymentForm.payment_method}
                   onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
@@ -1400,16 +1403,20 @@ function convertTo24Hour(time) {
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleClassSubmit}>
                 <h3>{editingClassId ? 'Edit' : 'Add'} Class</h3>
+                <label className="admin-form-label" htmlFor="class-name">Class Name</label>
                 <input
                   className="admin-form-input"
+                  id="class-name"
                   name="class_name"
                   value={classForm.class_name}
                   onChange={(e) => setClassForm({ ...classForm, class_name: e.target.value })}
                   placeholder="yoga, pilates, crossfit, etc"
                   required
                 />
+                <label className="admin-form-label" htmlFor="class-trainer">Assign Trainer</label>
                 <select
                   className="admin-form-input"
+                  id="class-trainer"
                   name="trainer_id"
                   value={classForm.trainer_id}
                   onChange={(e) => setClassForm({ ...classForm, trainer_id: e.target.value })}
@@ -1421,23 +1428,29 @@ function convertTo24Hour(time) {
                     </option>
                   ))}
                 </select>
+                <label className="admin-form-label" htmlFor="class-date">Schedule Date</label>
                 <input
                   className="admin-form-input"
                   type="date"
+                  id="class-date"
                   name="schedule_date"
                   value={classForm.schedule_date}
                   onChange={(e) => setClassForm({ ...classForm, schedule_date: e.target.value })}
                 />
+                <label className="admin-form-label" htmlFor="class-time">Schedule Time</label>
                 <input
                   className="admin-form-input"
                   type="time"
+                  id="class-time"
                   name="schedule_time"
                   value={classForm.schedule_time}
                   onChange={(e) => setClassForm({ ...classForm, schedule_time: e.target.value })}
                 />
+                <label className="admin-form-label" htmlFor="class-capacity">Capacity</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="class-capacity"
                   name="capacity"
                   value={classForm.capacity}
                   onChange={(e) => setClassForm({ ...classForm, capacity: e.target.value })}
@@ -1546,17 +1559,21 @@ function convertTo24Hour(time) {
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleEquipmentSubmit}>
                 <h3>{editingEquipmentId ? 'Edit' : 'Add'} Equipment</h3>
+                <label className="admin-form-label" htmlFor="equipment-name">Equipment Name</label>
                 <input
                   className="admin-form-input"
+                  id="equipment-name"
                   name="equipment_name"
                   value={equipmentForm.equipment_name}
                   onChange={(e) => setEquipmentForm({ ...equipmentForm, equipment_name: e.target.value })}
                   placeholder="Equipment name"
                   required
                 />
+                <label className="admin-form-label" htmlFor="equipment-quantity">Quantity</label>
                 <input
                   className="admin-form-input"
                   type="number"
+                  id="equipment-quantity"
                   name="quantity"
                   value={equipmentForm.quantity}
                   onChange={(e) => setEquipmentForm({ ...equipmentForm, quantity: e.target.value })}
@@ -1564,15 +1581,19 @@ function convertTo24Hour(time) {
                   min="0"
                   step="1"
                 />
+                <label className="admin-form-label" htmlFor="equipment-purchase-date">Purchase Date</label>
                 <input
                   className="admin-form-input"
                   type="date"
+                  id="equipment-purchase-date"
                   name="purchase_date"
                   value={equipmentForm.purchase_date}
                   onChange={(e) => setEquipmentForm({ ...equipmentForm, purchase_date: e.target.value })}
                 />
+                <label className="admin-form-label" htmlFor="equipment-status">Status</label>
                 <select
                   className="admin-form-input"
+                  id="equipment-status"
                   name="status"
                   value={equipmentForm.status}
                   onChange={(e) => setEquipmentForm({ ...equipmentForm, status: e.target.value })}
