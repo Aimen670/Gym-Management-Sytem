@@ -21,16 +21,46 @@ const ClassCard = ({
   };
 
   const formatTime = (value) => {
-    if (value == null) return '';
-    if (typeof value === 'string' && /^\d{1,2}:\d{2}/.test(value)) {
-      const [h, m] = value.split(':');
-      const hour = String(parseInt(h, 10)).padStart(2, '0');
-      return `${hour}:${m.slice(0, 2)}`;
+    if (value == null || value === '') return '';
+
+    // Handle common DB formats like 'HH:MM', 'HH:MM:SS'
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+
+      // Ignore null/placeholder-like values (common when backend sends a zero date/time)
+      if (!trimmed) return '';
+      if (trimmed.startsWith('1970')) return '';
+
+
+      // HH:MM
+      const hhmm = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
+      if (hhmm) {
+        const hour = String(parseInt(hhmm[1], 10)).padStart(2, '0');
+        return `${hour}:${hhmm[2]}`;
+      }
+
+      // HH:MM:SS
+      const hhmmss = /^(\d{1,2}):(\d{2}):(\d{2})(?:\..*)?$/.exec(trimmed);
+      if (hhmmss) {
+        const hour = String(parseInt(hhmmss[1], 10)).padStart(2, '0');
+        return `${hour}:${hhmmss[2]}`;
+      }
+
+      // Fallback: if string starts with HH:MM
+      if (/^\d{1,2}:\d{2}/.test(trimmed)) {
+        const [h, m] = trimmed.split(':');
+        const hour = String(parseInt(h, 10)).padStart(2, '0');
+        return `${hour}:${(m || '').slice(0, 2)}`;
+      }
     }
+
+    // Handle ISO / Date-like values
     const d = new Date(value);
     if (!Number.isNaN(d.getTime())) {
+      // If backend sends an ISO with only time (common: 1970-01-01T...), show only the time.
       return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
     }
+
     return String(value);
   };
 

@@ -393,6 +393,112 @@ function AdminDashboard() {
     }
   };
 // 🔥 Add this helper function
+// Helper function to format time for display from various formats
+function formatTimeDisplay(time) {
+  if (!time) return '';
+  
+  if (time instanceof Date) {
+    // If it's a Date object (SQL Server TIME format), extract time
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+  
+  if (typeof time === 'string') {
+    const trimmed = time.trim();
+    
+    // If already in HH:MM format
+    if (/^\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    
+    // If in HH:MM:SS format
+    if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed.slice(0, 5);
+    }
+    
+    // If it's an ISO date string (like "1970-01-01T09:00:00.000Z")
+    if (trimmed.includes('T') && trimmed.includes(':')) {
+      const timePart = trimmed.split('T')[1];
+      return timePart.slice(0, 5);
+    }
+    
+    // If it starts with "1970-" (common issue with SQL Server TIME)
+    if (trimmed.startsWith('1970-')) {
+      const timeMatch = trimmed.match(/(\d{2}:\d{2})/);
+      if (timeMatch) {
+        return timeMatch[1];
+      }
+    }
+    
+    // Try to extract HH:MM pattern from the string
+    const timeMatch = trimmed.match(/(\d{2}:\d{2})/);
+    if (timeMatch) {
+      return timeMatch[1];
+    }
+    
+    return trimmed;
+  }
+  
+  // Fallback: convert to string and handle
+  const timeStr = String(time);
+  if (timeStr.includes(':')) {
+    return timeStr.slice(0, 5);
+  }
+  
+  return timeStr;
+}
+
+// Helper function to format time for input type="time"
+function formatTimeForInput(time) {
+  if (!time) return '';
+  
+  if (time instanceof Date) {
+    // If it's a Date object, extract time in HH:MM format
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+  
+  if (typeof time === 'string') {
+    // Handle various string formats
+    const trimmed = time.trim();
+    
+    // If already in HH:MM format
+    if (/^\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    
+    // If in HH:MM:SS format
+    if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed.slice(0, 5);
+    }
+    
+    // If it's an ISO date string (like "1970-01-01T09:00:00.000Z")
+    if (trimmed.includes('T') && trimmed.includes(':')) {
+      const timePart = trimmed.split('T')[1];
+      return timePart.slice(0, 5);
+    }
+    
+    // If it starts with "1970-" (common issue with SQL Server TIME)
+    if (trimmed.startsWith('1970-')) {
+      const timeMatch = trimmed.match(/(\d{2}:\d{2})/);
+      if (timeMatch) {
+        return timeMatch[1];
+      }
+    }
+    
+    // Try to extract HH:MM pattern from the string
+    const timeMatch = trimmed.match(/(\d{2}:\d{2})/);
+    if (timeMatch) {
+      return timeMatch[1];
+    }
+  }
+  
+  // Final fallback - return empty string to avoid invalid format
+  return '';
+}
+
 function convertTo24Hour(time) {
   if (!time) return null;
 
@@ -1426,7 +1532,7 @@ function convertTo24Hour(time) {
                   type="time"
                   id="class-time"
                   name="schedule_time"
-                  value={classForm.schedule_time}
+                  value={formatTimeForInput(classForm.schedule_time)}
                   onChange={(e) => setClassForm({ ...classForm, schedule_time: e.target.value })}
                 />
                 <label className="admin-form-label" htmlFor="class-capacity">Capacity</label>
@@ -1479,7 +1585,7 @@ function convertTo24Hour(time) {
                         <p className="admin-card-email">Instructor: {trainers.find(t => t.trainer_id === gymClass.trainer_id)?.name || 'Unassigned'}</p>
                         <div className="admin-card-meta">
                           {gymClass.schedule_date && <span>{String(gymClass.schedule_date).split('T')[0]}</span>}
-                          {gymClass.schedule_time && <span>{String(gymClass.schedule_time).slice(0, 5)}</span>}
+                          {gymClass.schedule_time && <span>{formatTimeDisplay(gymClass.schedule_time)}</span>}
                           {gymClass.capacity && <span className="status-badge">{gymClass.capacity} seats</span>}
                         </div>
                         {gymClass.associated_plans && (
@@ -1505,7 +1611,7 @@ function convertTo24Hour(time) {
                                 ? String(gymClass.schedule_date).split('T')[0]
                                 : '',
                               schedule_time: gymClass.schedule_time
-                                ? String(gymClass.schedule_time).slice(0, 5)
+                                ? formatTimeForInput(gymClass.schedule_time)
                                 : '',
                               capacity: gymClass.capacity ?? '',
                               plan_ids: planIdsArray
