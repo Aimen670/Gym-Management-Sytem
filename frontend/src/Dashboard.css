@@ -1182,7 +1182,7 @@
 }
 
 .admin-exercises-list {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
   padding-right: 8px;
   border: 1px solid #333333;
@@ -1275,23 +1275,42 @@
 
 .admin-exercise-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  padding-left: 30px;
-}
-
-@media (max-width: 768px) {
-  .admin-exercise-fields {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding-left: 0;
-  }
+  grid-template-columns: 80px 80px 100px;
+  gap: 8px;
+  padding-left: 15px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-exercise-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .admin-exercise-fields {
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 0;
+  }
+  
+  .admin-exercise-field {
+    max-width: 100%;
+  }
+}
+
+.admin-exercise-field .admin-form-input {
+  width: 100%;
+  min-width: 45px;
+  font-size: 11px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+.admin-exercise-field label {
+  font-size: 11px;
 }
 
 /* Admin List Panel */
@@ -1611,7 +1630,7 @@
 /* Admin Grid Layout */
 .admin-grid-layout {
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 500px 1fr;
   gap: 24px;
   margin-top: 24px;
 }
@@ -1646,11 +1665,12 @@
   border: 1px solid #333333;
   border-radius: 12px;
   padding: 24px;
+  min-width: 0;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 16px;
   height: fit-content;
-  sticky: top 40px;
 }
 
 .admin-form-panel h3 {
@@ -1948,12 +1968,12 @@
 .admin-workout-exercise-fields .admin-form-input {
   color: #ffffff;
   width: 100%;
-  min-width: 260px;
+  min-width: 120px;
 }
 
 .admin-workout-exercise-row {
   display: grid;
-  grid-template-columns: 1.4fr 0.5fr 0.5fr 0.9fr auto;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   align-items: center;
   padding: 8px 0;

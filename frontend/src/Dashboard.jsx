@@ -1221,7 +1221,6 @@ function Dashboard() {
                             disabled={subscribeBusyId === plan.plan_id}
                           >
                             <option value="card">Card</option>
-                            <option value="cash">Cash</option>
                             <option value="online">Online</option>
                           </select>
                         </label>

@@ -7,7 +7,7 @@ function AdminSignup() {
     name: '',
     email: '',
     password: '',
-    role: ''
+    role: 'staff'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -120,21 +120,6 @@ function AdminSignup() {
                     {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>Role</label>
-                <select 
-                  name="role" 
-                  value={formData.role} 
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Role</option>
-                  <option value="manager">Manager</option>
-                  <option value="supervisor">Supervisor</option>
-                  <option value="staff">Staff</option>
-                </select>
               </div>
 
               <button type="submit" className="auth-button" disabled={loading}>
