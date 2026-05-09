@@ -1,12 +1,13 @@
 const { Server } = require('socket.io');
 const { sql, getPool } = require('./db');
+const { createWorkoutLog } = require('./models/memberPortalModel');
 
 let io;
 
 function initializeSocketServer(httpServer) {
     io = new Server(httpServer, {
         cors: {
-            origin: ['http://localhost:5174', 'http://localhost:5173', 'http://localhost:3000', 'http://192.168.100.220:5174'],
+            origin: "*",
             methods: ['GET', 'POST'],
             credentials: true
         }
@@ -81,6 +82,7 @@ function initializeSocketServer(httpServer) {
                 socket.join(roomName);
                 socket.data.sessionToken = sessionToken;
                 socket.data.sessionId = session.session_id;
+                socket.data.memberId = session.member_id;
                 socket.data.isPhone = true;
 
                 // Update session status in database
@@ -173,20 +175,64 @@ function initializeSocketServer(httpServer) {
 
         socket.on('workout-log-submit', async (data) => {
             if (!socket.data.isPhone || !socket.data.sessionToken) return;
-            
+
             const roomName = `session-${socket.data.sessionToken}`;
-            
+
             try {
+                console.log('workout-log-submit payload received from phone:', data);
+
+                let memberId = socket.data.memberId;
+                
+                // Fallback if memberId was not cached for some reason
+                if (!memberId) {
+                    const pool = getPool();
+                    const sessionResult = await pool.request()
+                        .input('session_token', sql.UniqueIdentifier, socket.data.sessionToken)
+                        .query(`
+                            SELECT member_id
+                            FROM dbo.phone_remote_sessions
+                            WHERE session_token = @session_token
+                        `);
+                    
+                    if (sessionResult.recordset.length > 0) {
+                        memberId = sessionResult.recordset[0].member_id;
+                        socket.data.memberId = memberId;
+                    }
+                }
+
+                if (!memberId) {
+                    throw new Error('Could not identify member for this session');
+                }
+
+                // Use the standardized model to create the workout log
+                // This handles validation, plan checks, and database insertion consistently
+                const createdLog = await createWorkoutLog(memberId, {
+                    workout_plan_id: data.workout_plan_id,
+                    exercise_id: data.exercise_id,
+                    weight_used: data.weight_used,
+                    reps_completed: data.reps_completed,
+                    log_date: data.log_date
+                });
+
+                console.log('Successfully saved workout log from phone:', createdLog.log_id);
+
+                // Broadcast the log to the room (desktop dashboard will receive it)
+                io.to(roomName).emit('workout-log-submit', createdLog);
+
+                // Also log the remote event for tracking
                 const pool = getPool();
                 await pool.request()
                     .input('session_token', sql.UniqueIdentifier, socket.data.sessionToken)
                     .input('event_type', sql.VarChar(50), 'workout_log_submit')
-                    .input('event_data', sql.NVarChar, JSON.stringify(data))
+                    .input('event_data', sql.NVarChar, JSON.stringify(createdLog))
                     .query('EXEC SP_log_remote_event @session_token, @event_type, @event_data');
 
-                io.to(roomName).emit('workout-log-submit', data);
             } catch (error) {
                 console.error('Error handling workout-log-submit:', error);
+
+                io.to(roomName).emit('workout-log-error', {
+                    message: error?.message || 'Failed to save workout log',
+                });
             }
         });
 

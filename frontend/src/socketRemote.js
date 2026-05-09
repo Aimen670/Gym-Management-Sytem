@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://192.168.100.220:5000';
+const SOCKET_URL = `http://${window.location.hostname}:5000`;
 
 class SocketRemote {
     constructor() {
@@ -98,6 +98,10 @@ class SocketRemote {
 
     emitEndWorkout(data = {}) {
         this.socket?.emit('end-workout', data);
+    }
+
+    emitWorkoutLogSubmit(data = {}) {
+        this.socket?.emit('workout-log-submit', data);
     }
 
     // Event listeners

@@ -52,7 +52,7 @@ const startServer = async () => {
         
         server.listen(PORT, '0.0.0.0', () => {
             console.log(`Server is running on http://localhost:${PORT}`);
-            console.log(`Server is accessible on network at http://192.168.100.220:${PORT}`);
+            console.log(`Server is accessible on your network at the IP of this machine on port ${PORT}`);
         });
     } catch (err) {
         console.error('Server start failed:', err.message);

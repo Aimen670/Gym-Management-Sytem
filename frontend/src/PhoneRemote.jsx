@@ -71,7 +71,7 @@ const PhoneRemote = () => {
             const fetchWorkoutPlans = async () => {
                 try {
                     console.log('Fetching workout plans for memberId:', memberId);
-                    const res = await fetch(`http://192.168.100.220:5000/api/member-workout-plans/${memberId}`);
+                    const res = await fetch(`http://${window.location.hostname}:5000/api/member-workout-plans/${memberId}`);
                     console.log('Response status:', res.status);
                     const data = await res.json();
                     console.log('Workout plans data:', data);
@@ -93,7 +93,7 @@ const PhoneRemote = () => {
         if (selectedPlan) {
             const fetchExercises = async () => {
                 try {
-                    const res = await fetch(`http://192.168.100.220:5000/api/workout-plans/${selectedPlan}/exercises`);
+                    const res = await fetch(`http://${window.location.hostname}:5000/api/workout-plans/${selectedPlan}/exercises`);
                     const data = await res.json();
                     if (res.ok) {
                         setExercises(data);
@@ -157,7 +157,7 @@ const PhoneRemote = () => {
             log_date: logDate
         };
 
-        socketRemote.emit('workout-log-submit', workoutData);
+        socketRemote.emitWorkoutLogSubmit(workoutData);
         showFeedback('Workout log sent to desktop');
         
         setSelectedExercise('');

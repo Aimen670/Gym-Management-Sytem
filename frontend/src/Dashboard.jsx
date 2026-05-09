@@ -391,8 +391,9 @@ function Dashboard() {
     setActiveNav('overview');
   };
 
-  const handleWorkoutLogFromPhone = (data) => {
+  const handleWorkoutLogFromPhone = async (data) => {
     console.log('Workout log data from phone:', data);
+
     setWorkoutLogForm((prev) => ({
       ...prev,
       workout_plan_id: data.workout_plan_id,
@@ -401,7 +402,12 @@ function Dashboard() {
       reps_completed: data.reps_completed,
       log_date: data.log_date
     }));
-    showNotification('Workout data received from phone');
+
+    showToast('Workout data received from phone', 'success');
+
+    // Ensure the workout logs list (dashboard?.workoutLogs) refreshes immediately
+    // after the phone saves the log via sockets.
+    await refreshDashboard();
   };
 
   function durationLabel(months) {
@@ -2015,7 +2021,7 @@ function Dashboard() {
                   onFatigueUpdate={handleFatigueUpdate}
                   onEndWorkout={handleEndWorkout}
                   onWorkoutLogSubmit={handleWorkoutLogFromPhone}
-                  localIP="192.168.100.220"
+                  localIP={window.location.hostname}
                 />
               </div>
 
