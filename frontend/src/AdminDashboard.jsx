@@ -99,6 +99,7 @@ function AdminDashboard() {
   const [editingExerciseId, setEditingExerciseId] = useState(null);
   const [editingCatalogExerciseId, setEditingCatalogExerciseId] = useState(null);
   const [editingDietPlanId, setEditingDietPlanId] = useState(null);
+  const [editingWorkoutPlanId, setEditingWorkoutPlanId] = useState(null);
   const [showMemberForm, setShowMemberForm] = useState(false);
   const [showMemberPassword, setShowMemberPassword] = useState(false);
   const [memberForm, setMemberForm] = useState({
@@ -678,14 +679,36 @@ function convertTo24Hour(time) {
         exercises: workoutPlanForm.exercises
       };
 
-      await fetchJson('http://localhost:5000/api/admin/workout-plans', {
-        method: 'POST',
+      const url = editingWorkoutPlanId
+        ? `http://localhost:5000/api/admin/workout-plans/${editingWorkoutPlanId}`
+        : 'http://localhost:5000/api/admin/workout-plans';
+      const method = editingWorkoutPlanId ? 'PUT' : 'POST';
+
+      await fetchJson(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       await loadWorkoutPlans();
       setWorkoutPlanForm(emptyWorkoutPlan);
+      setEditingWorkoutPlanId(null);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWorkoutPlanDelete = async (planId) => {
+    if (!window.confirm('Are you sure you want to delete this workout plan?')) return;
+    
+    setLoading(true);
+    setError('');
+    try {
+      await fetchJson(`http://localhost:5000/api/admin/workout-plans/${planId}`, { method: 'DELETE' });
+      await loadWorkoutPlans();
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -1754,7 +1777,7 @@ function convertTo24Hour(time) {
             </div>
             <div className="admin-grid-layout">
               <form className="admin-form-panel" onSubmit={handleWorkoutPlanSubmit}>
-                <h3>Add Workout Plan</h3>
+                <h3>{editingWorkoutPlanId ? 'Edit' : 'Add'} Workout Plan</h3>
                 
                 <label className="admin-form-label" htmlFor="workout-member">Member</label>
                 <select
@@ -1912,8 +1935,20 @@ function convertTo24Hour(time) {
 
                 <div className="admin-card-actions">
                   <button className="admin-btn-primary" type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : 'Add Workout Plan'}
+                    {loading ? 'Saving...' : editingWorkoutPlanId ? 'Update Workout Plan' : 'Add Workout Plan'}
                   </button>
+                  {editingWorkoutPlanId && (
+                    <button
+                      type="button"
+                      className="admin-btn-secondary"
+                      onClick={() => {
+                        setEditingWorkoutPlanId(null);
+                        setWorkoutPlanForm(emptyWorkoutPlan);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </form>
 
@@ -1947,6 +1982,27 @@ function convertTo24Hour(time) {
                             ))}
                           </div>
                         )}
+                      </div>
+                      <div className="admin-card-actions">
+                        <button
+                          className="admin-btn-secondary"
+                          onClick={() => {
+                            setEditingWorkoutPlanId(plan.workout_plan_id);
+                            setWorkoutPlanForm({
+                              member_id: plan.member_id,
+                              trainer_id: plan.trainer_id || '',
+                              exercises: plan.exercises || []
+                            });
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="admin-btn-danger"
+                          onClick={() => handleWorkoutPlanDelete(plan.workout_plan_id)}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))

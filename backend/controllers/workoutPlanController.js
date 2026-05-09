@@ -6,6 +6,8 @@ const {
   getWorkoutPlansAdmin,
   getWorkoutExercisesAdmin,
   createWorkoutPlan,
+  updateWorkoutPlan,
+  deleteWorkoutPlan,
   createWorkoutExercise,
   updateWorkoutExercise,
   deleteWorkoutExercise
@@ -84,6 +86,38 @@ async function createWorkoutPlanHandler(req, res) {
   }
 }
 
+async function updateWorkoutPlanHandler(req, res) {
+  try {
+    const planId = parseInt(req.params.id, 10);
+    if (Number.isNaN(planId)) {
+      return res.status(400).json({ error: 'Invalid workout plan id' });
+    }
+
+    const updated = await updateWorkoutPlan(planId, req.body);
+    res.json(updated);
+  } catch (err) {
+    console.error('Workout plan update error:', err);
+    const statusCode = err.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to update workout plan' });
+  }
+}
+
+async function deleteWorkoutPlanHandler(req, res) {
+  try {
+    const planId = parseInt(req.params.id, 10);
+    if (Number.isNaN(planId)) {
+      return res.status(400).json({ error: 'Invalid workout plan id' });
+    }
+
+    await deleteWorkoutPlan(planId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Workout plan delete error:', err);
+    const statusCode = err.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: err.message || 'Failed to delete workout plan' });
+  }
+}
+
 async function getWorkoutExercisesAdminHandler(req, res) {
   try {
     const exercises = await getWorkoutExercisesAdmin();
@@ -143,6 +177,8 @@ module.exports = {
   deleteCatalogExerciseHandler,
   getWorkoutPlansAdminHandler,
   createWorkoutPlanHandler,
+  updateWorkoutPlanHandler,
+  deleteWorkoutPlanHandler,
   getWorkoutExercisesAdminHandler,
   createWorkoutExerciseHandler,
   updateWorkoutExerciseHandler,

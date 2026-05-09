@@ -1,7 +1,9 @@
 const {
     getTrainerAvailableSlots,
     getAllTrainersAvailability,
-    createTrainerSessionBooking
+    createTrainerSessionBooking,
+    getMemberTrainerSessions,
+    deleteTrainerSession
 } = require('../models/trainingBookingModel');
 
 async function getTrainerAvailableSlotsHandler(req, res) {
@@ -50,9 +52,40 @@ async function createTrainerSessionBookingHandler(req, res) {
     }
 }
 
+async function getMemberTrainerSessionsHandler(req, res) {
+    try {
+        const memberId = parseInt(req.params.memberId, 10);
+        if (Number.isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member id' });
+        }
+        const sessions = await getMemberTrainerSessions(memberId);
+        res.json(sessions);
+    } catch (err) {
+        console.error('Get member sessions error:', err);
+        res.status(500).json({ error: err.message || 'Failed to load sessions' });
+    }
+}
+
+async function deleteTrainerSessionHandler(req, res) {
+    try {
+        const sessionId = parseInt(req.params.sessionId, 10);
+        if (Number.isNaN(sessionId)) {
+            return res.status(400).json({ error: 'Invalid session id' });
+        }
+        await deleteTrainerSession(sessionId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete session error:', err);
+        const statusCode = err.message.includes('not found') ? 404 : 400;
+        res.status(statusCode).json({ error: err.message || 'Failed to delete session' });
+    }
+}
+
 module.exports = {
     getTrainerAvailableSlotsHandler,
     getAllTrainersAvailabilityHandler,
-    createTrainerSessionBookingHandler
+    createTrainerSessionBookingHandler,
+    getMemberTrainerSessionsHandler,
+    deleteTrainerSessionHandler
 };
 

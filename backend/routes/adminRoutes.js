@@ -21,6 +21,8 @@ const {
     deleteCatalogExerciseHandler,
     getWorkoutPlansAdminHandler,
     createWorkoutPlanHandler,
+    updateWorkoutPlanHandler,
+    deleteWorkoutPlanHandler,
     getWorkoutExercisesAdminHandler,
     createWorkoutExerciseHandler,
     updateWorkoutExerciseHandler,
@@ -96,6 +98,8 @@ router.delete('/admin/equipment/:id', deleteEquipmentHandler);
 
 router.get('/admin/workout-plans', getWorkoutPlansAdminHandler);
 router.post('/admin/workout-plans', createWorkoutPlanHandler);
+router.put('/admin/workout-plans/:id', updateWorkoutPlanHandler);
+router.delete('/admin/workout-plans/:id', deleteWorkoutPlanHandler);
 router.get('/admin/exercises', getExercisesCatalogHandler);
 router.post('/admin/exercises', createCatalogExerciseHandler);
 router.put('/admin/exercises/:id', updateCatalogExerciseHandler);

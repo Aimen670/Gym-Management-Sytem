@@ -243,9 +243,50 @@ async function createTrainerSessionBooking(memberId, payload) {
     return inserted.recordset[0];
 }
 
+async function getMemberTrainerSessions(memberId) {
+    const pool = getPool();
+    const req = pool.request();
+    req.input('member_id', sql.Int, memberId);
+
+    const result = await req.query(`
+        SELECT
+            ts.session_id,
+            ts.session_date,
+            ts.session_time,
+            ts.status,
+            t.name AS trainer_name,
+            t.specialization
+        FROM trainer_sessions ts
+        LEFT JOIN trainers t ON ts.trainer_id = t.trainer_id
+        WHERE ts.member_id = @member_id
+        ORDER BY ts.session_date DESC, ts.session_time DESC
+    `);
+
+    return result.recordset;
+}
+
+async function deleteTrainerSession(sessionId) {
+    const pool = getPool();
+    const req = pool.request();
+    req.input('session_id', sql.Int, sessionId);
+
+    const result = await req.query(`
+        DELETE FROM trainer_sessions
+        WHERE session_id = @session_id
+    `);
+
+    if (result.rowsAffected[0] === 0) {
+        throw new Error('Session not found');
+    }
+
+    return { success: true };
+}
+
 module.exports = {
     getTrainerAvailableSlots,
     getAllTrainersAvailability,
-    createTrainerSessionBooking
+    createTrainerSessionBooking,
+    getMemberTrainerSessions,
+    deleteTrainerSession
 };
 

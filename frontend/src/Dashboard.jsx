@@ -105,6 +105,7 @@ function Dashboard() {
   const [bookingSlot, setBookingSlot] = useState('');
   const [bookingNote, setBookingNote] = useState('');
   const [bookingBusy, setBookingBusy] = useState(false);
+  const [bookedSessions, setBookedSessions] = useState([]);
   const [measurementForm, setMeasurementForm] = useState(() => ({
     weight: '',
     bmi: '',
@@ -191,6 +192,9 @@ function Dashboard() {
         if (fitnessGoalsRes.ok && Array.isArray(fitnessGoalsData)) {
           setFitnessGoals(fitnessGoalsData);
         }
+
+        // Load booked trainer sessions
+        await loadBookedSessions();
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -254,8 +258,9 @@ function Dashboard() {
           localStorage.setItem('memberProfile', JSON.stringify(dashData.profile));
         }
       }
-    } catch (e) {
-      console.error(e);
+      await loadBookedSessions();
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -304,11 +309,41 @@ function Dashboard() {
       setBookingNote('Session booked successfully.');
       await refreshDashboard();
       await loadTrainerSlots(bookingTrainerId, bookingDate);
+      await loadBookedSessions();
     } catch (e) {
       console.error(e);
       setBookingNote(e.message);
     } finally {
       setBookingBusy(false);
+    }
+  }
+
+  async function loadBookedSessions() {
+    if (!memberId) return;
+    try {
+      const res = await fetch(`/api/member/${memberId}/trainer-sessions`);
+      const data = await readJsonBody(res);
+      if (!res.ok) throw new Error(data?.error || 'Failed to load sessions');
+      setBookedSessions(data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleDeleteSession(sessionId) {
+    if (!window.confirm('Are you sure you want to cancel this session?')) return;
+    
+    try {
+      const res = await fetch(`/api/member/${memberId}/trainer-sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
+      const data = await readJsonBody(res);
+      if (!res.ok) throw new Error(data?.error || 'Failed to delete session');
+      await loadBookedSessions();
+      await refreshDashboard();
+    } catch (e) {
+      console.error(e);
+      setError(e.message);
     }
   }
 
@@ -1728,6 +1763,37 @@ function Dashboard() {
                 <p className="member-muted" style={{ marginTop: 8 }}>
                   Availability is calculated from gym hours (09:00–17:00) minus existing scheduled sessions.
                 </p>
+              </div>
+
+              <div style={{ marginTop: '24px' }}>
+                <h3>Your Booked Sessions</h3>
+                {bookedSessions.length === 0 ? (
+                  <p className="member-muted">No trainer sessions booked yet.</p>
+                ) : (
+                  <ul className="member-schedule-list">
+                    {bookedSessions.map((session) => (
+                      <li key={session.session_id}>
+                        <div>
+                          <span className="member-pill">{session.status || 'Scheduled'}</span>
+                          <h3>{session.trainer_name || 'Trainer'}</h3>
+                          {session.specialization && <p className="member-muted">{session.specialization}</p>}
+                        </div>
+                        <div className="member-schedule-when">
+                          <span>{formatDate(session.session_date)}</span>
+                          <span>{formatTime(session.session_time)}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="member-plan-subscribe-btn"
+                          style={{ padding: '6px 12px', fontSize: '14px', marginTop: '8px' }}
+                          onClick={() => handleDeleteSession(session.session_id)}
+                        >
+                          Cancel
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {trainerAvailabilityError && (
