@@ -8,6 +8,26 @@ router.get('/test', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Get server's local network IP
+router.get('/server-ip', (req, res) => {
+    const os = require('os');
+    const interfaces = os.networkInterfaces();
+    let serverIp = 'localhost';
+    
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            // Skip over internal (loopback) and non-ipv4 addresses
+            if (iface.family === 'IPv4' && !iface.internal) {
+                serverIp = iface.address;
+                break;
+            }
+        }
+        if (serverIp !== 'localhost') break;
+    }
+    
+    res.json({ ip: serverIp });
+});
+
 // Get workout plans for a member
 router.get('/member-workout-plans/:memberId', async (req, res) => {
     try {

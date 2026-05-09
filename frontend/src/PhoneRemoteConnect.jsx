@@ -26,16 +26,28 @@ const PhoneRemoteConnect = ({
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('http://localhost:5000/api/remote-sessions', {
+            // First, try to get the server's actual network IP
+            let currentIP = window.location.hostname;
+            try {
+                const ipRes = await fetch(`http://${window.location.hostname}:5000/api/server-ip`);
+                const ipData = await ipRes.json();
+                if (ipData.ip && ipData.ip !== 'localhost') {
+                    currentIP = ipData.ip;
+                }
+            } catch (ipErr) {
+                console.warn('Could not fetch server IP, falling back to hostname:', ipErr);
+            }
+
+            const res = await fetch(`http://${window.location.hostname}:5000/api/remote-sessions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_id: memberId, local_ip: localIP })
+                body: JSON.stringify({ member_id: memberId, local_ip: currentIP })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || 'Failed to create session');
             
             setSessionToken(data.session_token);
-            setQrUrl(`http://${localIP}:5174/connect/${data.session_token}`);
+            setQrUrl(`http://${currentIP}:5174/connect/${data.session_token}`);
             setConnectionStatus('waiting');
             
             // Join the session room
@@ -46,7 +58,7 @@ const PhoneRemoteConnect = ({
         } finally {
             setLoading(false);
         }
-    }, [memberId, localIP]);
+    }, [memberId]);
 
     // Setup socket event listeners
     useEffect(() => {

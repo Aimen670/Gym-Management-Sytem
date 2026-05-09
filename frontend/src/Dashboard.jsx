@@ -2021,7 +2021,6 @@ function Dashboard() {
                   onFatigueUpdate={handleFatigueUpdate}
                   onEndWorkout={handleEndWorkout}
                   onWorkoutLogSubmit={handleWorkoutLogFromPhone}
-                  localIP={window.location.hostname}
                 />
               </div>
 
