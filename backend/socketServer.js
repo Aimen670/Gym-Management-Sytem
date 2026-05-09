@@ -104,8 +104,12 @@ function initializeSocketServer(httpServer) {
 
                 console.log(`Phone connected to session: ${sessionToken}`);
                 
-                // Send success to phone
-                socket.emit('connection-established', { success: true });
+                // Send session data to phone including member_id
+                socket.emit('connection-established', { 
+                    success: true,
+                    member_id: session.member_id,
+                    session_token: sessionToken
+                });
             } catch (error) {
                 console.error('Error connecting phone:', error);
                 socket.emit('error', { message: 'Failed to connect phone' });

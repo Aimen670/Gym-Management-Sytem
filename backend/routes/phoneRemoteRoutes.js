@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { sql, getPool } = require('../db');
 
+// Test endpoint
+router.get('/test', (req, res) => {
+    console.log('Test endpoint hit');
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Get workout plans for a member
 router.get('/member-workout-plans/:memberId', async (req, res) => {
     try {
         const { memberId } = req.params;
+        console.log('Fetching workout plans for memberId:', memberId);
         const pool = getPool();
         
         const plansResult = await pool.request()
@@ -62,6 +69,7 @@ router.get('/member-workout-plans/:memberId', async (req, res) => {
             }
         });
 
+        console.log(`Found ${plans.length} workout plans for member ${memberId}`);
         res.json(plans);
     } catch (error) {
         console.error('Error fetching member workout plans:', error);
@@ -100,6 +108,7 @@ router.get('/workout-plans/:planId/exercises', async (req, res) => {
 router.post('/remote-sessions', async (req, res) => {
     try {
         const { member_id, workout_plan_id, local_ip } = req.body;
+        console.log('Creating session for member_id:', member_id);
         
         const memberId = parseInt(member_id, 10);
         if (Number.isNaN(memberId)) {
@@ -115,6 +124,7 @@ router.post('/remote-sessions', async (req, res) => {
             .query('EXEC SP_create_remote_session @member_id, @workout_plan_id, @local_ip, @session_token OUTPUT');
 
         const sessionToken = result.output.session_token;
+        console.log('Session created with token:', sessionToken, 'for member:', memberId);
         
         res.status(201).json({ 
             session_token: sessionToken,
@@ -131,14 +141,24 @@ router.post('/remote-sessions', async (req, res) => {
 router.get('/remote-sessions/:sessionToken', async (req, res) => {
     try {
         const { sessionToken } = req.params;
+        console.log('Getting session for token:', sessionToken);
         
         const pool = getPool();
+        
+        // Direct query to debug
+        const directResult = await pool.request()
+            .input('session_token', sql.UniqueIdentifier, sessionToken)
+            .query('SELECT session_id, session_token, member_id, session_status FROM phone_remote_sessions WHERE session_token = @session_token');
+        console.log('Direct query result:', directResult.recordset);
+        
         const result = await pool.request()
             .input('session_token', sql.UniqueIdentifier, sessionToken)
             .query('EXEC SP_get_session_by_token @session_token');
 
+        console.log('Stored proc result:', result.recordset);
+        
         if (result.recordset.length === 0) {
-            return res.status(404).json({ error: 'Session not found' });
+            return res.status(404).json({ error: 'Session not found', direct: directResult.recordset });
         }
 
         res.json(result.recordset[0]);

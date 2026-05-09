@@ -8,6 +8,8 @@ const PhoneRemote = () => {
     const [connectionStatus, setConnectionStatus] = useState('connecting');
     const [error, setError] = useState('');
     const [feedback, setFeedback] = useState('');
+    const [fetchError, setFetchError] = useState('');
+    const [rawResponse, setRawResponse] = useState('');
     const [memberId, setMemberId] = useState(null);
     
     // Workout log form state
@@ -33,21 +35,8 @@ const PhoneRemote = () => {
         const connect = async () => {
             try {
                 await socketRemote.connectToSession(sessionToken);
-                
-                // Fetch session details to get memberId
-                console.log('Fetching session details for token:', sessionToken);
-                const sessionRes = await fetch(`http://192.168.100.220:5000/api/remote-sessions/${sessionToken}`);
-                console.log('Session response status:', sessionRes.status);
-                const sessionData = await sessionRes.json();
-                console.log('Session data:', sessionData);
-                if (sessionRes.ok && sessionData.member_id) {
-                    setMemberId(sessionData.member_id);
-                    console.log('Member ID set:', sessionData.member_id);
-                } else {
-                    console.error('Failed to get member_id from session');
-                }
-                
-                setConnectionStatus('connected');
+                // member_id will be received via 'connection-established' socket event
+                console.log('Socket connection initiated');
             } catch (err) {
                 console.error(err);
                 setError('Failed to connect to session. Please check the session token.');
@@ -58,8 +47,13 @@ const PhoneRemote = () => {
         connect();
 
         const handleConnectionEstablished = (data) => {
+            console.log('Connection established with data:', data);
             if (data?.success) {
                 setConnectionStatus('connected');
+                if (data.member_id) {
+                    setMemberId(data.member_id);
+                    console.log('Member ID received from socket:', data.member_id);
+                }
             }
         };
 
@@ -482,13 +476,15 @@ const PhoneRemote = () => {
                     borderRadius: '12px',
                     border: '1px solid rgba(40, 199, 182, 0.2)'
                 }}>
-                    <h3 style={{ 
-                        marginTop: 0, 
-                        marginBottom: '20px', 
-                        color: '#d7fffb'
-                    }}>
+                    <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#28c7b6', fontSize: '20px' }}>
                         Log Workout
                     </h3>
+
+                    <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#0d1314', borderRadius: '8px', fontSize: '12px', color: '#8ca3a0' }}>
+                        Member ID: {memberId || 'Not loaded'} | Plans: {workoutPlans.length}
+                        {fetchError && <div style={{color: '#ef4444', marginTop: '4px'}}>Error: {fetchError}</div>}
+                        {rawResponse && <pre style={{marginTop: '8px', fontSize: '10px', overflow: 'auto', maxHeight: '100px'}}>{rawResponse}</pre>}
+                    </div>
 
                     <Select
                         label="Workout Plan"
