@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import ClassCard from './components/ClassCard';
 import Toast from './components/Toast';
+import PhoneRemoteConnect from './PhoneRemoteConnect';
 
 function memberIdFromToken(token) {
   if (!token || typeof token !== 'string') return null;
@@ -143,6 +144,12 @@ function Dashboard() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
   const [cachedProfile] = useState(readStoredMemberProfile);
+  
+  // Phone remote workout tracking state
+  const [currentSet, setCurrentSet] = useState(0);
+  const [currentReps, setCurrentReps] = useState(0);
+  const [isResting, setIsResting] = useState(false);
+  const [fatigueLevel, setFatigueLevel] = useState('moderate');
 
   const memberId = useMemo(() => memberIdFromToken(localStorage.getItem('token')), []);
 
@@ -346,6 +353,56 @@ function Dashboard() {
       setError(e.message);
     }
   }
+
+  // Phone remote callback functions
+  const handleSetComplete = () => {
+    setCurrentSet(prev => prev + 1);
+    setCurrentReps(0);
+    console.log('Set complete. New set:', currentSet + 1);
+  };
+
+  const handleAddRep = () => {
+    setCurrentReps(prev => prev + 1);
+    console.log('Rep added. Total reps:', currentReps + 1);
+  };
+
+  const handleRemoveRep = () => {
+    setCurrentReps(prev => Math.max(0, prev - 1));
+    console.log('Rep removed. Total reps:', Math.max(0, currentReps - 1));
+  };
+
+  const handleStartRest = () => {
+    setIsResting(true);
+    console.log('Rest timer started');
+  };
+
+  const handlePauseRest = () => {
+    setIsResting(false);
+    console.log('Rest timer paused');
+  };
+
+  const handleFatigueUpdate = (data) => {
+    setFatigueLevel(data.level || 'moderate');
+    console.log('Fatigue level updated:', data.level);
+  };
+
+  const handleEndWorkout = () => {
+    console.log('Workout ended. Sets:', currentSet);
+    setActiveNav('overview');
+  };
+
+  const handleWorkoutLogFromPhone = (data) => {
+    console.log('Workout log data from phone:', data);
+    setWorkoutLogForm((prev) => ({
+      ...prev,
+      workout_plan_id: data.workout_plan_id,
+      exercise_id: data.exercise_id,
+      weight_used: data.weight_used,
+      reps_completed: data.reps_completed,
+      log_date: data.log_date
+    }));
+    showNotification('Workout data received from phone');
+  };
 
   function durationLabel(months) {
     if (months === 1) return '1 month';
@@ -1945,6 +2002,45 @@ function Dashboard() {
                   </p>
                 </article>
               </section>
+
+              {/* Phone Remote Control */}
+              <div style={{ marginBottom: '24px' }}>
+                <PhoneRemoteConnect
+                  memberId={memberId}
+                  onSetComplete={handleSetComplete}
+                  onAddRep={handleAddRep}
+                  onRemoveRep={handleRemoveRep}
+                  onStartRest={handleStartRest}
+                  onPauseRest={handlePauseRest}
+                  onFatigueUpdate={handleFatigueUpdate}
+                  onEndWorkout={handleEndWorkout}
+                  onWorkoutLogSubmit={handleWorkoutLogFromPhone}
+                  localIP="192.168.100.220"
+                />
+              </div>
+
+              {/* Live workout tracking display */}
+              <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'linear-gradient(145deg, #1a2f33 0%, #0f1f22 100%)', borderRadius: '16px', border: '1px solid rgba(40, 199, 182, 0.1)' }}>
+                <h3 style={{ marginTop: 0, marginBottom: '12px', color: '#d7fffb' }}>Live Workout Tracking</h3>
+                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                  <div>
+                    <span className="member-detail-label">Current Set</span>
+                    <strong className="member-stat-value">{currentSet}</strong>
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Current Reps</span>
+                    <strong className="member-stat-value">{currentReps}</strong>
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Resting</span>
+                    <strong className="member-stat-value">{isResting ? 'Yes' : 'No'}</strong>
+                  </div>
+                  <div>
+                    <span className="member-detail-label">Fatigue</span>
+                    <strong className="member-stat-value" style={{ textTransform: 'capitalize' }}>{fatigueLevel}</strong>
+                  </div>
+                </div>
+              </div>
 
               <form className="member-membership-box" onSubmit={handleWorkoutLogSubmit}>
                 <h3>Log a workout</h3>

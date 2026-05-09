@@ -8,6 +8,7 @@ import AdminLogin from './AdminLogin';
 import AdminSignup from './AdminSignup';
 import AdminDashboard from './AdminDashboard';
 import Splash from './Splash';
+import PhoneRemote from './PhoneRemote';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin-signup" element={<AdminSignup />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/demo" element={<Dashboard />} />
+        <Route path="/connect/:sessionToken" element={<PhoneRemote />} />
       </Routes>
     </Router>
   );
