@@ -15,14 +15,30 @@ router.get('/server-ip', (req, res) => {
     let serverIp = 'localhost';
     
     for (const name of Object.keys(interfaces)) {
+        // Skip virtual interfaces
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('virtual') || lowerName.includes('vbox') || 
+            lowerName.includes('docker') || lowerName.includes('wsl') || 
+            lowerName.includes('vmnet')) {
+            continue;
+        }
+
         for (const iface of interfaces[name]) {
             // Skip over internal (loopback) and non-ipv4 addresses
             if (iface.family === 'IPv4' && !iface.internal) {
-                serverIp = iface.address;
-                break;
+                // Prefer 192.168.x.x or 10.x.x.x addresses
+                if (iface.address.startsWith('192.168.') || iface.address.startsWith('10.')) {
+                    serverIp = iface.address;
+                    break;
+                }
+                // If we haven't found a preferred one yet, take this as a fallback
+                if (serverIp === 'localhost') {
+                    serverIp = iface.address;
+                }
             }
         }
-        if (serverIp !== 'localhost') break;
+        // If we found a preferred IP, stop looking
+        if (serverIp.startsWith('192.168.') || serverIp.startsWith('10.')) break;
     }
     
     res.json({ ip: serverIp });

@@ -47,7 +47,7 @@ const PhoneRemoteConnect = ({
             if (!res.ok) throw new Error(data?.error || 'Failed to create session');
             
             setSessionToken(data.session_token);
-            setQrUrl(`http://${currentIP}:5174/connect/${data.session_token}`);
+            setQrUrl(`http://${currentIP}:${window.location.port}/connect/${data.session_token}`);
             setConnectionStatus('waiting');
             
             // Join the session room
