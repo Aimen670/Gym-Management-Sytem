@@ -70,12 +70,8 @@ CREATE TABLE trainer_sessions (
     FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
 );
 
--- Optional: explicit trainer availability (used by some builds/endpoints).
 -- The current app can also calculate availability from gym hours + existing sessions,
--- but defining this table prevents "Invalid object name 'trainer_availability'" errors.
-IF OBJECT_ID('dbo.trainer_availability', 'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.trainer_availability (
+CREATE TABLE dbo.trainer_availability (
         availability_id INT PRIMARY KEY IDENTITY(1,1),
         trainer_id INT NOT NULL,
         available_date DATE NOT NULL,
@@ -83,10 +79,10 @@ BEGIN
         end_time TIME(0) NOT NULL,
         is_active BIT NOT NULL CONSTRAINT DF_trainer_availability_is_active DEFAULT (1),
         FOREIGN KEY (trainer_id) REFERENCES trainers(trainer_id) ON DELETE CASCADE
-    );
-    CREATE INDEX IX_trainer_availability_trainer_date
-        ON dbo.trainer_availability (trainer_id, available_date);
-END
+);
+CREATE INDEX IX_trainer_availability_trainer_date
+ON dbo.trainer_availability (trainer_id, available_date);
+
 
 
 CREATE TABLE workout_plans (
@@ -313,12 +309,9 @@ INSERT INTO class_enrollments (class_id, member_id) VALUES
 (4, 2), (4, 3), -- Ahmed Raza and Fatima Noor in Evening Pilates
 (5, 1), (5, 4), (5, 5); -- Ali Khan, Ayesha Malik, and Hassan Ali in Cardio Blast
 
--- ============================================================
 -- GENERAL TRANSACTIONAL STORED PROCEDURE FOR CLASS UPDATE
--- ============================================================
 -- This procedure updates class details and synchronizes plans
--- in a single atomic transaction.
--- ============================================================
+
 GO
 CREATE PROCEDURE sp_UpdateClassWithPlans
     @class_id INT,
@@ -335,7 +328,6 @@ BEGIN
     BEGIN TRANSACTION;
     
     BEGIN TRY
-        -- 1. Update Class Details
         UPDATE classes
         SET class_name = @class_name,
             trainer_id = @trainer_id,
@@ -350,8 +342,7 @@ BEGIN
             THROW 50001, 'Class not found', 1;
         END
 
-        -- 2. Synchronize Plans (Delete existing and insert new)
-        -- Only if plan_ids_json is provided
+        
         IF @plan_ids_json IS NOT NULL
         BEGIN
             DELETE FROM class_plans WHERE class_id = @class_id;
