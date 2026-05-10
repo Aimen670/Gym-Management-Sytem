@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import ClassCard from './components/ClassCard';
@@ -529,6 +529,28 @@ function Dashboard() {
       setWorkoutLogBusy(false);
     }
   }
+
+  // Memoized onChange handlers to prevent input focus loss
+  const handleWorkoutPlanChange = useCallback((e) => {
+    const value = e.target.value;
+    setWorkoutLogForm((prev) => ({
+      ...prev,
+      workout_plan_id: value,
+      exercise_id: ''
+    }));
+  }, []);
+
+  const handleExerciseChange = useCallback((e) => {
+    setWorkoutLogForm((prev) => ({ ...prev, exercise_id: e.target.value }));
+  }, []);
+
+  const handleWeightChange = useCallback((e) => {
+    setWorkoutLogForm((prev) => ({ ...prev, weight_used: e.target.value }));
+  }, []);
+
+  const handleRepsChange = useCallback((e) => {
+    setWorkoutLogForm((prev) => ({ ...prev, reps_completed: e.target.value }));
+  }, []);
 
   const showDetailedProgress = (progress, goal) => {
     let progressMessage = `📊 **Progress Report for ${goal.goal_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}**\n\n`;
@@ -2024,29 +2046,7 @@ function Dashboard() {
                 />
               </div>
 
-              {/* Live workout tracking display */}
-              <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'linear-gradient(145deg, #1a2f33 0%, #0f1f22 100%)', borderRadius: '16px', border: '1px solid rgba(40, 199, 182, 0.1)' }}>
-                <h3 style={{ marginTop: 0, marginBottom: '12px', color: '#d7fffb' }}>Live Workout Tracking</h3>
-                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                  <div>
-                    <span className="member-detail-label">Current Set</span>
-                    <strong className="member-stat-value">{currentSet}</strong>
-                  </div>
-                  <div>
-                    <span className="member-detail-label">Current Reps</span>
-                    <strong className="member-stat-value">{currentReps}</strong>
-                  </div>
-                  <div>
-                    <span className="member-detail-label">Resting</span>
-                    <strong className="member-stat-value">{isResting ? 'Yes' : 'No'}</strong>
-                  </div>
-                  <div>
-                    <span className="member-detail-label">Fatigue</span>
-                    <strong className="member-stat-value" style={{ textTransform: 'capitalize' }}>{fatigueLevel}</strong>
-                  </div>
-                </div>
-              </div>
-
+              
               <form className="member-membership-box" onSubmit={handleWorkoutLogSubmit}>
                 <h3>Log a workout</h3>
                 <div className="member-detail-grid">
@@ -2055,14 +2055,7 @@ function Dashboard() {
                     <select
                       className="member-input"
                       value={workoutLogForm.workout_plan_id}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setWorkoutLogForm((prev) => ({
-                          ...prev,
-                          workout_plan_id: value,
-                          exercise_id: ''
-                        }));
-                      }}
+                      onChange={handleWorkoutPlanChange}
                       required
                     >
                       <option value="">Select plan…</option>
@@ -2078,7 +2071,7 @@ function Dashboard() {
                     <select
                       className="member-input"
                       value={workoutLogForm.exercise_id}
-                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, exercise_id: e.target.value }))}
+                      onChange={handleExerciseChange}
                       disabled={!workoutLogForm.workout_plan_id}
                       required
                     >
@@ -2096,7 +2089,7 @@ function Dashboard() {
                       type="number"
                       className="member-input"
                       value={workoutLogForm.weight_used}
-                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, weight_used: e.target.value }))}
+                      onChange={handleWeightChange}
                       min="0"
                       step="0.5"
                       required
@@ -2108,7 +2101,7 @@ function Dashboard() {
                       type="number"
                       className="member-input"
                       value={workoutLogForm.reps_completed}
-                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, reps_completed: e.target.value }))}
+                      onChange={handleRepsChange}
                       min="0"
                       step="1"
                       required
@@ -2121,6 +2114,7 @@ function Dashboard() {
                       className="member-input"
                       value={workoutLogForm.log_date}
                       onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, log_date: e.target.value }))}
+                      readOnly
                     />
                   </div>
                 </div>
