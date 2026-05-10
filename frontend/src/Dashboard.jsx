@@ -2110,10 +2110,9 @@ function Dashboard() {
                   <div>
                     <span className="member-detail-label">Log date</span>
                     <input
-                      type="date"
+                      type="text"
                       className="member-input"
                       value={workoutLogForm.log_date}
-                      onChange={(e) => setWorkoutLogForm((prev) => ({ ...prev, log_date: e.target.value }))}
                       readOnly
                     />
                   </div>

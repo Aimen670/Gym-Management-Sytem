@@ -2,6 +2,100 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import socketRemote from './socketRemote';
 
+const Input = ({ label, value, onChange, type = 'text', required = false }) => (
+    <div style={{ marginBottom: '16px' }}>
+        <label style={{ 
+            display: 'block', 
+            marginBottom: '8px', 
+            color: '#8ca3a0',
+            fontSize: '14px',
+            fontWeight: '500'
+        }}>
+            {label}
+            {required && <span style={{ color: '#ef4444' }}> *</span>}
+        </label>
+        <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            required={required}
+            style={{
+                width: '100%',
+                padding: '14px',
+                backgroundColor: '#0d1314',
+                border: '1px solid #243032',
+                borderRadius: '8px',
+                color: '#e6f4f2',
+                fontSize: '16px',
+                outline: 'none'
+            }}
+        />
+    </div>
+);
+
+const Select = ({ label, value, onChange, options, required = false, disabled = false }) => (
+    <div style={{ marginBottom: '16px' }}>
+        <label style={{ 
+            display: 'block', 
+            marginBottom: '8px', 
+            color: '#8ca3a0',
+            fontSize: '14px',
+            fontWeight: '500'
+        }}>
+            {label}
+            {required && <span style={{ color: '#ef4444' }}> *</span>}
+        </label>
+        <select
+            value={value}
+            onChange={onChange}
+            required={required}
+            disabled={disabled}
+            style={{
+                width: '100%',
+                padding: '14px',
+                backgroundColor: disabled ? '#0a0f10' : '#0d1314',
+                border: '1px solid #243032',
+                borderRadius: '8px',
+                color: disabled ? '#666' : '#e6f4f2',
+                fontSize: '16px',
+                outline: 'none'
+            }}
+        >
+            <option value="">{label}...</option>
+            {options.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                </option>
+            ))}
+        </select>
+    </div>
+);
+
+const Button = ({ onClick, children, color, disabled = false, fullWidth = false }) => (
+    <button
+        onClick={onClick}
+        disabled={disabled}
+        style={{
+            padding: '16px 24px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            border: 'none',
+            borderRadius: '12px',
+            backgroundColor: color,
+            color: 'white',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.5 : 1,
+            width: fullWidth ? '100%' : 'auto',
+            marginBottom: '12px',
+            minHeight: '56px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
+            transition: 'transform 0.1s ease'
+        }}
+    >
+        {children}
+    </button>
+);
+
 const PhoneRemote = () => {
     const { sessionToken } = useParams();
     const navigate = useNavigate();
@@ -200,100 +294,7 @@ const PhoneRemote = () => {
         }
     };
 
-    const Input = ({ label, value, onChange, type = 'text', required = false }) => (
-        <div style={{ marginBottom: '16px' }}>
-            <label style={{ 
-                display: 'block', 
-                marginBottom: '8px', 
-                color: '#8ca3a0',
-                fontSize: '14px',
-                fontWeight: '500'
-            }}>
-                {label}
-                {required && <span style={{ color: '#ef4444' }}> *</span>}
-            </label>
-            <input
-                type={type}
-                value={value}
-                onChange={onChange}
-                required={required}
-                style={{
-                    width: '100%',
-                    padding: '14px',
-                    backgroundColor: '#0d1314',
-                    border: '1px solid #243032',
-                    borderRadius: '8px',
-                    color: '#e6f4f2',
-                    fontSize: '16px',
-                    outline: 'none'
-                }}
-            />
-        </div>
-    );
-
-    const Select = ({ label, value, onChange, options, required = false, disabled = false }) => (
-        <div style={{ marginBottom: '16px' }}>
-            <label style={{ 
-                display: 'block', 
-                marginBottom: '8px', 
-                color: '#8ca3a0',
-                fontSize: '14px',
-                fontWeight: '500'
-            }}>
-                {label}
-                {required && <span style={{ color: '#ef4444' }}> *</span>}
-            </label>
-            <select
-                value={value}
-                onChange={onChange}
-                required={required}
-                disabled={disabled}
-                style={{
-                    width: '100%',
-                    padding: '14px',
-                    backgroundColor: disabled ? '#0a0f10' : '#0d1314',
-                    border: '1px solid #243032',
-                    borderRadius: '8px',
-                    color: disabled ? '#666' : '#e6f4f2',
-                    fontSize: '16px',
-                    outline: 'none'
-                }}
-            >
-                <option value="">{label}...</option>
-                {options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
-
-    const Button = ({ onClick, children, color, disabled = false, fullWidth = false }) => (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            style={{
-                padding: '16px 24px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                border: 'none',
-                borderRadius: '12px',
-                backgroundColor: color,
-                color: 'white',
-                cursor: disabled ? 'not-allowed' : 'pointer',
-                opacity: disabled ? 0.5 : 1,
-                width: fullWidth ? '100%' : 'auto',
-                marginBottom: '12px',
-                minHeight: '56px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
-                transition: 'transform 0.1s ease'
-            }}
-        >
-            {children}
-        </button>
-    );
-
+    
     if (connectionStatus === 'error') {
         return (
             <div style={{
@@ -525,12 +526,30 @@ const PhoneRemote = () => {
                         required
                     />
 
-                    <Input
-                        label="Date"
-                        value={logDate}
-                        onChange={(e) => setLogDate(e.target.value)}
-                        type="date"
-                    />
+                    <div style={{ marginBottom: '16px' }}>
+                        <label style={{ 
+                            display: 'block', 
+                            marginBottom: '8px', 
+                            color: '#8ca3a0',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                        }}>
+                            Date
+                        </label>
+                        <div style={{
+                            width: '100%',
+                            padding: '14px',
+                            backgroundColor: '#0d1314',
+                            border: '1px solid #243032',
+                            borderRadius: '8px',
+                            color: '#e6f4f2',
+                            fontSize: '16px',
+                            outline: 'none',
+                            cursor: 'default'
+                        }}>
+                            {new Date().toLocaleDateString()}
+                        </div>
+                    </div>
 
                     <Button
                         onClick={handleSubmitWorkout}
