@@ -313,4 +313,62 @@ INSERT INTO class_enrollments (class_id, member_id) VALUES
 (4, 2), (4, 3), -- Ahmed Raza and Fatima Noor in Evening Pilates
 (5, 1), (5, 4), (5, 5); -- Ali Khan, Ayesha Malik, and Hassan Ali in Cardio Blast
 
+-- ============================================================
+-- GENERAL TRANSACTIONAL STORED PROCEDURE FOR CLASS UPDATE
+-- ============================================================
+-- This procedure updates class details and synchronizes plans
+-- in a single atomic transaction.
+-- ============================================================
+GO
+CREATE PROCEDURE sp_UpdateClassWithPlans
+    @class_id INT,
+    @class_name VARCHAR(100),
+    @trainer_id INT,
+    @schedule_date DATE,
+    @schedule_time TIME,
+    @capacity INT,
+    @plan_ids_json NVARCHAR(MAX) -- JSON array of plan IDs, e.g., '[1, 2, 3]'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    BEGIN TRANSACTION;
+    
+    BEGIN TRY
+        -- 1. Update Class Details
+        UPDATE classes
+        SET class_name = @class_name,
+            trainer_id = @trainer_id,
+            schedule_date = @schedule_date,
+            schedule_time = @schedule_time,
+            capacity = @capacity
+        WHERE class_id = @class_id;
+
+        -- Check if class exists
+        IF @@ROWCOUNT = 0
+        BEGIN
+            THROW 50001, 'Class not found', 1;
+        END
+
+        -- 2. Synchronize Plans (Delete existing and insert new)
+        -- Only if plan_ids_json is provided
+        IF @plan_ids_json IS NOT NULL
+        BEGIN
+            DELETE FROM class_plans WHERE class_id = @class_id;
+
+            INSERT INTO class_plans (class_id, plan_id)
+            SELECT @class_id, value
+            FROM OPENJSON(@plan_ids_json);
+        END
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+
+
 

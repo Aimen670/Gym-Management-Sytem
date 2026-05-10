@@ -214,42 +214,21 @@ async function updateClass(classId, payload) {
     };
 
     const { class_name, trainer_id, schedule_date, schedule_time, capacity, plan_ids } = validateClassPayload(mergedPayload, true);
-    const transaction = new sql.Transaction(pool);
 
     try {
-        await transaction.begin();
-
-        const request = transaction.request();
+        const request = pool.request();
         request.input('class_id', sql.Int, classId);
         request.input('class_name', sql.VarChar(100), class_name);
         request.input('trainer_id', sql.Int, trainer_id || null);
         request.input('schedule_date', sql.Date, schedule_date || null);
         request.input('schedule_time', sql.VarChar(8), schedule_time || null);
         request.input('capacity', sql.Int, capacity);
+        request.input('plan_ids_json', sql.NVarChar(sql.MAX), plan_ids ? JSON.stringify(plan_ids) : null);
 
-        const updateResult = await request.query(`
-            UPDATE classes
-            SET class_name = @class_name,
-                trainer_id = @trainer_id,
-                schedule_date = @schedule_date,
-                schedule_time = @schedule_time,
-                capacity = @capacity
-            WHERE class_id = @class_id
-        `);
+        // Execute the stored procedure which handles the transaction
+        await request.execute('sp_UpdateClassWithPlans');
 
-        if (updateResult.rowsAffected[0] === 0) {
-            throw new Error('Class not found');
-        }
-
-        if (plan_ids !== undefined) {
-            await transaction.request()
-                .input('class_id', sql.Int, classId)
-                .query('DELETE FROM class_plans WHERE class_id = @class_id');
-            await saveClassPlans(classId, plan_ids, transaction);
-        }
-
-        await transaction.commit();
-
+        // Fetch the updated class to return to the client
         const result = await pool.request()
             .input('class_id', sql.Int, classId)
             .query('SELECT class_id, class_name, trainer_id, schedule_date, schedule_time, capacity FROM classes WHERE class_id = @class_id');
@@ -258,7 +237,7 @@ async function updateClass(classId, payload) {
         updatedClass.plan_ids = await getClassPlanIds(classId);
         return updatedClass;
     } catch (err) {
-        await transaction.rollback();
+        console.error('Stored Procedure updateClass error:', err.message);
         throw err;
     }
 }
